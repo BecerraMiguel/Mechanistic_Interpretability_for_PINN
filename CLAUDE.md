@@ -204,6 +204,7 @@ The project is successful if we achieve at least two of:
 - **Probing Target**: Ground-truth derivatives for probing must come from analytical solutions, not from the PINN's own predictions.
 - **Test Coverage**: Aim for >80% coverage. Place tests in `tests/` mirroring `src/` structure.
 - **Reproducibility**: Set random seeds in training configs. Save all hyperparameters with model checkpoints.
+- **Progress Tracking**: **NEVER create day/task summary files** (e.g., DAY4_SUMMARY.md, TASK1_COMPLETE.md). All progress documentation goes in `PROJECT_PROGRESS.md` ONLY. Update it once per day after completing all tasks. This avoids token waste and duplicate information.
 
 ## Common Pitfalls
 

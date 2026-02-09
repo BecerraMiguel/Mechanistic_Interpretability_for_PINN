@@ -8,14 +8,19 @@ This module provides a flexible trainer for PINNs with:
 - Optional W&B integration
 - Checkpointing
 - Validation during training
+- Early stopping based on validation error
+- Solution visualization (heatmaps)
 """
 
 from typing import Dict, Optional, Callable, Tuple
 import time
+import os
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import numpy as np
+import matplotlib.pyplot as plt
 
 from src.utils.derivatives import compute_derivatives
 
@@ -111,6 +116,11 @@ class PINNTrainer:
             "loss_ic": [],
             "relative_l2_error": [],
         }
+
+        # Early stopping state
+        self.best_val_error = float('inf')
+        self.patience_counter = 0
+        self.best_model_state = None
 
     def sample_collocation_points(
         self, random_seed: Optional[int] = None
@@ -285,6 +295,9 @@ class PINNTrainer:
         print_every: int = 100,
         save_every: int = 1000,
         save_path: Optional[str] = None,
+        early_stopping: bool = False,
+        patience: int = 50,
+        min_delta: float = 0.0001,
     ) -> Dict[str, list]:
         """
         Train the PINN for a specified number of epochs.
@@ -303,6 +316,12 @@ class PINNTrainer:
             Save checkpoint every N epochs. Default: 1000.
         save_path : str, optional
             Path to save checkpoints. Default: None (no saving).
+        early_stopping : bool, optional
+            Whether to enable early stopping. Default: False.
+        patience : int, optional
+            Number of validation checks with no improvement before stopping. Default: 50.
+        min_delta : float, optional
+            Minimum change in validation error to qualify as improvement. Default: 0.0001.
 
         Returns
         -------
@@ -347,6 +366,30 @@ class PINNTrainer:
             if epoch % validate_every == 0:
                 rel_error = self.validate(n_test_points=5000)
                 self.history["relative_l2_error"].append(rel_error)
+
+                # Early stopping check
+                if early_stopping:
+                    if rel_error < self.best_val_error - min_delta:
+                        # Improvement detected
+                        self.best_val_error = rel_error
+                        self.patience_counter = 0
+                        # Save best model state
+                        self.best_model_state = {
+                            k: v.cpu().clone() for k, v in self.model.state_dict().items()
+                        }
+                    else:
+                        # No improvement
+                        self.patience_counter += 1
+
+                    # Check if we should stop
+                    if self.patience_counter >= patience:
+                        print(f"\nEarly stopping triggered at epoch {epoch}")
+                        print(f"Best validation error: {self.best_val_error:.4f}%")
+                        # Restore best model
+                        if self.best_model_state is not None:
+                            self.model.load_state_dict(self.best_model_state)
+                            print("Restored best model weights")
+                        break
             else:
                 rel_error = None
 
@@ -450,6 +493,117 @@ class PINNTrainer:
 
         print(f"Loaded checkpoint from epoch {self.epoch}")
 
+    def generate_solution_heatmap(
+        self,
+        save_path: str,
+        n_points: int = 100,
+        figsize: Tuple[int, int] = (15, 5),
+        dpi: int = 150,
+    ):
+        """
+        Generate and save solution heatmap visualization.
+
+        Creates a figure with three subplots:
+        1. PINN predicted solution
+        2. Analytical solution (if available)
+        3. Absolute error
+
+        Parameters
+        ----------
+        save_path : str
+            Path to save the figure.
+        n_points : int, optional
+            Number of points per dimension for visualization grid. Default: 100.
+        figsize : Tuple[int, int], optional
+            Figure size (width, height) in inches. Default: (15, 5).
+        dpi : int, optional
+            Resolution in dots per inch. Default: 150.
+        """
+        self.model.eval()
+
+        # Check if problem is 2D
+        if self.problem.spatial_dim != 2:
+            raise NotImplementedError(
+                "Visualization currently only supports 2D problems"
+            )
+
+        # Create evaluation grid
+        x = torch.linspace(
+            self.problem.domain[0][0], self.problem.domain[0][1], n_points
+        )
+        y = torch.linspace(
+            self.problem.domain[1][0], self.problem.domain[1][1], n_points
+        )
+        X, Y = torch.meshgrid(x, y, indexing="ij")
+        grid_points = torch.stack([X.flatten(), Y.flatten()], dim=1).to(self.device)
+
+        # Compute PINN solution
+        with torch.no_grad():
+            u_pred = self.model(grid_points).cpu().numpy().reshape(n_points, n_points)
+
+        # Compute analytical solution
+        u_exact = (
+            self.problem.analytical_solution(grid_points)
+            .cpu()
+            .numpy()
+            .reshape(n_points, n_points)
+        )
+
+        # Compute error
+        error = np.abs(u_pred - u_exact)
+
+        # Create figure
+        fig, axes = plt.subplots(1, 3, figsize=figsize, dpi=dpi)
+
+        # Convert grid to numpy for plotting
+        X_np = X.numpy()
+        Y_np = Y.numpy()
+
+        # Plot 1: PINN Solution
+        im1 = axes[0].contourf(X_np, Y_np, u_pred, levels=50, cmap="viridis")
+        axes[0].set_title("PINN Solution", fontsize=12, fontweight="bold")
+        axes[0].set_xlabel("x")
+        axes[0].set_ylabel("y")
+        axes[0].set_aspect("equal")
+        plt.colorbar(im1, ax=axes[0], label="u(x, y)")
+
+        # Plot 2: Analytical Solution
+        im2 = axes[1].contourf(X_np, Y_np, u_exact, levels=50, cmap="viridis")
+        axes[1].set_title("Analytical Solution", fontsize=12, fontweight="bold")
+        axes[1].set_xlabel("x")
+        axes[1].set_ylabel("y")
+        axes[1].set_aspect("equal")
+        plt.colorbar(im2, ax=axes[1], label="u(x, y)")
+
+        # Plot 3: Absolute Error
+        im3 = axes[2].contourf(X_np, Y_np, error, levels=50, cmap="hot")
+        axes[2].set_title(
+            f"Absolute Error\n(Max: {error.max():.2e}, Mean: {error.mean():.2e})",
+            fontsize=12,
+            fontweight="bold",
+        )
+        axes[2].set_xlabel("x")
+        axes[2].set_ylabel("y")
+        axes[2].set_aspect("equal")
+        plt.colorbar(im3, ax=axes[2], label="|u_pred - u_exact|")
+
+        plt.tight_layout()
+
+        # Save figure
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        plt.savefig(save_path, dpi=dpi, bbox_inches="tight")
+        plt.close()
+
+        print(f"Solution heatmap saved to: {save_path}")
+
+        # Log to W&B if enabled
+        if self.use_wandb:
+            try:
+                import wandb
+                wandb.log({"solution_heatmap": wandb.Image(save_path)})
+            except ImportError:
+                pass
+
 
 def train_pinn(
     model: nn.Module,
@@ -534,6 +688,9 @@ def train_pinn(
         print_every=config.get("print_every", 100),
         save_every=config.get("save_every", 1000),
         save_path=config.get("save_path", None),
+        early_stopping=config.get("early_stopping", False),
+        patience=config.get("patience", 50),
+        min_delta=config.get("min_delta", 0.0001),
     )
 
     return model, history

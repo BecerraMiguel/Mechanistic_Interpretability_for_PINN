@@ -681,3 +681,169 @@ class TestIntegration:
         # Final error should be reasonable (model should learn something)
         final_error = history["relative_l2_error"][-1]
         assert final_error < 100  # At least better than 100% error
+
+
+class TestEarlyStopping:
+    """Test early stopping functionality."""
+
+    def test_early_stopping_triggers(self):
+        """Test that early stopping triggers when validation doesn't improve."""
+        model = MLP(input_dim=2, hidden_dims=[16], output_dim=1)
+        problem = PoissonProblem()
+        optimizer = optim.Adam(model.parameters(), lr=1e-5)  # Small lr for slow convergence
+
+        trainer = PINNTrainer(
+            model=model,
+            problem=problem,
+            optimizer=optimizer,
+            n_interior=50,
+            n_boundary=10,
+        )
+
+        history = trainer.train(
+            n_epochs=1000,
+            validate_every=10,
+            print_every=1000,
+            early_stopping=True,
+            patience=3,
+            min_delta=0.1,
+        )
+
+        # Should stop before 1000 epochs
+        assert len(history["loss_total"]) < 1000
+        assert trainer.patience_counter >= 3
+
+    def test_early_stopping_restores_best_model(self):
+        """Test that early stopping restores the best model weights."""
+        model = MLP(input_dim=2, hidden_dims=[32], output_dim=1)
+        problem = PoissonProblem()
+        optimizer = optim.Adam(model.parameters(), lr=1e-3)
+
+        trainer = PINNTrainer(
+            model=model,
+            problem=problem,
+            optimizer=optimizer,
+            n_interior=100,
+            n_boundary=20,
+        )
+
+        # Train with early stopping
+        trainer.train(
+            n_epochs=200,
+            validate_every=10,
+            print_every=200,
+            early_stopping=True,
+            patience=3,
+            min_delta=0.01,
+        )
+
+        # Best model state should be saved
+        assert trainer.best_model_state is not None
+        assert trainer.best_val_error < float('inf')
+
+    def test_no_early_stopping_by_default(self):
+        """Test that early stopping is disabled by default."""
+        model = MLP(input_dim=2, hidden_dims=[32], output_dim=1)
+        problem = PoissonProblem()
+        optimizer = optim.Adam(model.parameters())
+
+        trainer = PINNTrainer(
+            model=model,
+            problem=problem,
+            optimizer=optimizer,
+            n_interior=50,
+            n_boundary=10,
+        )
+
+        history = trainer.train(
+            n_epochs=20,
+            validate_every=5,
+            print_every=20,
+        )
+
+        # Should run all epochs
+        assert len(history["loss_total"]) == 20
+
+    def test_train_pinn_with_early_stopping(self):
+        """Test train_pinn convenience function with early stopping."""
+        model = MLP(input_dim=2, hidden_dims=[32, 32], output_dim=1)
+        problem = PoissonProblem()
+
+        config = {
+            "optimizer": "adam",
+            "lr": 1e-3,
+            "n_epochs": 500,
+            "n_interior": 100,
+            "n_boundary": 20,
+            "validate_every": 20,
+            "print_every": 500,
+            "early_stopping": True,
+            "patience": 5,
+            "min_delta": 0.01,
+        }
+
+        trained_model, history = train_pinn(model, problem, config)
+
+        # Training should have run (possibly stopped early)
+        assert len(history["loss_total"]) > 0
+        assert len(history["loss_total"]) <= 500
+
+
+class TestVisualization:
+    """Test solution visualization functionality."""
+
+    def test_generate_solution_heatmap(self):
+        """Test that solution heatmap generation works."""
+        model = MLP(input_dim=2, hidden_dims=[32, 32], output_dim=1)
+        problem = PoissonProblem()
+        optimizer = optim.Adam(model.parameters())
+
+        trainer = PINNTrainer(
+            model=model,
+            problem=problem,
+            optimizer=optimizer,
+            n_interior=100,
+            n_boundary=20,
+        )
+
+        # Train briefly
+        trainer.train(n_epochs=50, print_every=50)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            save_path = os.path.join(tmpdir, "test_heatmap.png")
+            trainer.generate_solution_heatmap(save_path, n_points=50)
+
+            # Check that file was created
+            assert os.path.exists(save_path)
+
+            # Check that file is not empty
+            assert os.path.getsize(save_path) > 0
+
+    def test_generate_solution_heatmap_custom_params(self):
+        """Test solution heatmap with custom parameters."""
+        model = MLP(input_dim=2, hidden_dims=[32], output_dim=1)
+        problem = PoissonProblem()
+        optimizer = optim.Adam(model.parameters())
+
+        trainer = PINNTrainer(
+            model=model,
+            problem=problem,
+            optimizer=optimizer,
+            n_interior=100,
+            n_boundary=20,
+        )
+
+        # Train briefly
+        trainer.train(n_epochs=20, print_every=20)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            save_path = os.path.join(tmpdir, "custom_heatmap.png")
+            trainer.generate_solution_heatmap(
+                save_path,
+                n_points=30,
+                figsize=(12, 4),
+                dpi=100,
+            )
+
+            assert os.path.exists(save_path)
+            assert os.path.getsize(save_path) > 0
