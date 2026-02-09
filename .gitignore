@@ -45,7 +45,7 @@ outputs/models/*
 outputs/activations/*
 *.h5
 *.hdf5
-*.pt
+#*.pt
 *.pth
 
 # Keep directory structure
@@ -68,5 +68,5 @@ htmlcov/
 Thumbs.db
 
 # Project tracking (working documents, not for version control)
-PROJECT_PROGRESS.md
+
 DAY*_COMPLETION_SUMMARY.md
