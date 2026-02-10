@@ -1,0 +1,74 @@
+{
+  "task": "First Derivative Probing",
+  "configuration": {
+    "activation_file": "data/activations/poisson_mlp_100x100.h5",
+    "epochs": 1000,
+    "learning_rate": 0.001,
+    "device": "cpu",
+    "n_points": 10000,
+    "n_layers": 4
+  },
+  "results": [
+    {
+      "layer_name": "layer_0",
+      "du_dx": {
+        "r2": 0.7845232486724854,
+        "mse": 0.5316144824028015,
+        "explained_variance": 0.7852173447608948,
+        "training_time_s": 55.663952112197876
+      },
+      "du_dy": {
+        "r2": 0.788300633430481,
+        "mse": 0.5222949981689453,
+        "explained_variance": 0.7884491682052612,
+        "training_time_s": 42.872475385665894
+      }
+    },
+    {
+      "layer_name": "layer_1",
+      "du_dx": {
+        "r2": 0.7965366244316101,
+        "mse": 0.5019755363464355,
+        "explained_variance": 0.7965367436408997,
+        "training_time_s": 29.464359998703003
+      },
+      "du_dy": {
+        "r2": 0.7959253787994385,
+        "mse": 0.5034837126731873,
+        "explained_variance": 0.7959253191947937,
+        "training_time_s": 13.264631748199463
+      }
+    },
+    {
+      "layer_name": "layer_2",
+      "du_dx": {
+        "r2": 0.8219398260116577,
+        "mse": 0.43930190801620483,
+        "explained_variance": 0.8219399452209473,
+        "training_time_s": 10.942190170288086
+      },
+      "du_dy": {
+        "r2": 0.8074923753738403,
+        "mse": 0.4749460816383362,
+        "explained_variance": 0.8074926733970642,
+        "training_time_s": 11.06138300895691
+      }
+    },
+    {
+      "layer_name": "layer_3",
+      "du_dx": {
+        "r2": 0.912379264831543,
+        "mse": 0.21617387235164642,
+        "explained_variance": 0.9123870134353638,
+        "training_time_s": 14.162013053894043
+      },
+      "du_dy": {
+        "r2": 0.8926059007644653,
+        "mse": 0.2649577856063843,
+        "explained_variance": 0.8926059603691101,
+        "training_time_s": 13.242275714874268
+      }
+    }
+  ],
+  "total_training_time_s": 191.00115275382996
+}

@@ -1,0 +1,98 @@
+{
+  "task": "Second Derivative Probing",
+  "configuration": {
+    "activation_file": "data/activations/poisson_mlp_100x100.h5",
+    "epochs": 1000,
+    "learning_rate": 0.001,
+    "device": "cpu",
+    "n_points": 10000,
+    "n_layers": 4
+  },
+  "results": [
+    {
+      "layer_name": "layer_0",
+      "d2u_dx2": {
+        "r2": -0.13548052310943604,
+        "mse": 9.655314445495605,
+        "explained_variance": -0.07785618305206299,
+        "training_time_s": 42.29598665237427
+      },
+      "d2u_dy2": {
+        "r2": -0.10480809211730957,
+        "mse": 9.394498825073242,
+        "explained_variance": -0.06501781940460205,
+        "training_time_s": 37.29952430725098
+      },
+      "laplacian": {
+        "r2": -0.4061582088470459,
+        "mse": 47.827857971191406,
+        "explained_variance": -0.051171302795410156,
+        "training_time_s": 65.64425301551819
+      }
+    },
+    {
+      "layer_name": "layer_1",
+      "d2u_dx2": {
+        "r2": 0.05665689706802368,
+        "mse": 8.021515846252441,
+        "explained_variance": 0.05668705701828003,
+        "training_time_s": 59.69394516944885
+      },
+      "d2u_dy2": {
+        "r2": 0.04217416048049927,
+        "mse": 8.14466667175293,
+        "explained_variance": 0.04247236251831055,
+        "training_time_s": 23.21675181388855
+      },
+      "laplacian": {
+        "r2": -0.043079376220703125,
+        "mse": 35.4784049987793,
+        "explained_variance": 0.025572359561920166,
+        "training_time_s": 25.199023485183716
+      }
+    },
+    {
+      "layer_name": "layer_2",
+      "d2u_dx2": {
+        "r2": 0.2016189694404602,
+        "mse": 6.7888617515563965,
+        "explained_variance": 0.2049909234046936,
+        "training_time_s": 25.556459665298462
+      },
+      "d2u_dy2": {
+        "r2": 0.19384551048278809,
+        "mse": 6.85496187210083,
+        "explained_variance": 0.1972230076789856,
+        "training_time_s": 26.650588989257812
+      },
+      "laplacian": {
+        "r2": 0.18748188018798828,
+        "mse": 27.636293411254883,
+        "explained_variance": 0.19058126211166382,
+        "training_time_s": 23.262640237808228
+      }
+    },
+    {
+      "layer_name": "layer_3",
+      "d2u_dx2": {
+        "r2": 0.46364784240722656,
+        "mse": 4.560755252838135,
+        "explained_variance": 0.4680907130241394,
+        "training_time_s": 24.1033296585083
+      },
+      "d2u_dy2": {
+        "r2": 0.501226544380188,
+        "mse": 4.241213321685791,
+        "explained_variance": 0.5051900744438171,
+        "training_time_s": 23.64475703239441
+      },
+      "laplacian": {
+        "r2": 0.342390239238739,
+        "mse": 22.367372512817383,
+        "explained_variance": 0.3476662039756775,
+        "training_time_s": 22.957033157348633
+      }
+    }
+  ],
+  "total_training_time_s": 400.00048089027405
+}
