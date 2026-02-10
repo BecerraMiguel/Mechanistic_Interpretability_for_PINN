@@ -110,7 +110,7 @@ class PoissonProblem(BaseProblem):
         y_coord = x[:, 1:2]  # (N, 1)
 
         # f = -2π² sin(πx)sin(πy)
-        f = -2 * (math.pi ** 2) * torch.sin(math.pi * x_coord) * torch.sin(math.pi * y_coord)
+        f = -2 * (math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(math.pi * y_coord)
         return f
 
     def boundary_condition(self, x: torch.Tensor) -> torch.Tensor:
@@ -234,11 +234,7 @@ class PoissonProblem(BaseProblem):
         return all_boundary_points
 
     def pde_residual(
-        self,
-        u: torch.Tensor,
-        x: torch.Tensor,
-        du_dx: torch.Tensor,
-        d2u_dx2: torch.Tensor
+        self, u: torch.Tensor, x: torch.Tensor, du_dx: torch.Tensor, d2u_dx2: torch.Tensor
     ) -> torch.Tensor:
         """
         Compute PDE residual: ∇²u - f(x).

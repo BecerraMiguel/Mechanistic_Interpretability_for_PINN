@@ -739,7 +739,7 @@ class TestEarlyStopping:
 
         # Best model state should be saved
         assert trainer.best_model_state is not None
-        assert trainer.best_val_error < float('inf')
+        assert trainer.best_val_error < float("inf")
 
     def test_no_early_stopping_by_default(self):
         """Test that early stopping is disabled by default."""

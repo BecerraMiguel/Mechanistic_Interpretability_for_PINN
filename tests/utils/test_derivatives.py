@@ -5,15 +5,16 @@ This module tests automatic differentiation functions used for computing
 PDE residuals.
 """
 
+import math
+
 import pytest
 import torch
-import math
 
 from src.utils.derivatives import (
     compute_derivatives,
     compute_gradient_components,
     compute_hessian_diagonal,
-    compute_mixed_derivative
+    compute_mixed_derivative,
 )
 
 
@@ -26,7 +27,7 @@ class TestComputeDerivatives:
         x = torch.randn(100, 2, requires_grad=True)
 
         # Simple function: u = x^2 + y^2
-        u = (x[:, 0:1]**2 + x[:, 1:2]**2)
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2
 
         # Compute gradient
         du_dx = compute_derivatives(u, x, order=1)
@@ -44,7 +45,7 @@ class TestComputeDerivatives:
 
         # Function: u = x^2 + y^2
         # Laplacian: ∇²u = 2 + 2 = 4
-        u = (x[:, 0:1]**2 + x[:, 1:2]**2)
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2
 
         laplacian = compute_derivatives(u, x, order=2)
 
@@ -58,7 +59,7 @@ class TestComputeDerivatives:
     def test_requires_grad_error(self):
         """Test that error is raised when x doesn't require grad."""
         x = torch.randn(100, 2, requires_grad=False)
-        u = x[:, 0:1]**2
+        u = x[:, 0:1] ** 2
 
         with pytest.raises(ValueError, match="requires_grad"):
             compute_derivatives(u, x, order=1)
@@ -66,7 +67,7 @@ class TestComputeDerivatives:
     def test_invalid_order(self):
         """Test that invalid order raises error."""
         x = torch.randn(100, 2, requires_grad=True)
-        u = x[:, 0:1]**2
+        u = x[:, 0:1] ** 2
 
         with pytest.raises(ValueError, match="Only order 1 and 2"):
             compute_derivatives(u, x, order=3)
@@ -85,7 +86,7 @@ class TestComputeDerivatives:
     def test_3d_gradient(self):
         """Test gradient in 3D."""
         x = torch.randn(100, 3, requires_grad=True)
-        u = (x[:, 0:1]**2 + x[:, 1:2]**2 + x[:, 2:3]**2)
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2 + x[:, 2:3] ** 2
 
         du_dx = compute_derivatives(u, x, order=1)
 
@@ -96,7 +97,7 @@ class TestComputeDerivatives:
     def test_3d_laplacian(self):
         """Test Laplacian in 3D."""
         x = torch.randn(100, 3, requires_grad=True)
-        u = (x[:, 0:1]**2 + x[:, 1:2]**2 + x[:, 2:3]**2)
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2 + x[:, 2:3] ** 2
 
         laplacian = compute_derivatives(u, x, order=2)
 
@@ -112,7 +113,7 @@ class TestComputeGradientComponents:
     def test_2d_gradient_components(self):
         """Test extracting gradient components in 2D."""
         x = torch.randn(100, 2, requires_grad=True)
-        u = x[:, 0:1]**2 + x[:, 1:2]**2
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2
 
         du_dx, du_dy = compute_gradient_components(u, x)
 
@@ -126,7 +127,7 @@ class TestComputeGradientComponents:
     def test_3d_gradient_components(self):
         """Test extracting gradient components in 3D."""
         x = torch.randn(100, 3, requires_grad=True)
-        u = x[:, 0:1]**3
+        u = x[:, 0:1] ** 3
 
         du_dx, du_dy, du_dz = compute_gradient_components(u, x)
 
@@ -135,14 +136,14 @@ class TestComputeGradientComponents:
         assert du_dz.shape == (100, 1)
 
         # Only x component should be non-zero
-        assert torch.allclose(du_dx, 3 * x[:, 0:1]**2, rtol=1e-5)
+        assert torch.allclose(du_dx, 3 * x[:, 0:1] ** 2, rtol=1e-5)
         assert torch.allclose(du_dy, torch.zeros_like(du_dy), atol=1e-6)
         assert torch.allclose(du_dz, torch.zeros_like(du_dz), atol=1e-6)
 
     def test_requires_grad_error(self):
         """Test error when x doesn't require grad."""
         x = torch.randn(100, 2, requires_grad=False)
-        u = x[:, 0:1]**2
+        u = x[:, 0:1] ** 2
 
         with pytest.raises(ValueError, match="requires_grad"):
             compute_gradient_components(u, x)
@@ -156,7 +157,7 @@ class TestComputeHessianDiagonal:
         x = torch.randn(100, 2, requires_grad=True)
         # u = x^2 + y^3
         # d2u/dx2 = 2, d2u/dy2 = 6y
-        u = x[:, 0:1]**2 + x[:, 1:2]**3
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 3
 
         d2u_dx2, d2u_dy2 = compute_hessian_diagonal(u, x)
 
@@ -170,7 +171,7 @@ class TestComputeHessianDiagonal:
     def test_3d_hessian_diagonal(self):
         """Test Hessian diagonal in 3D."""
         x = torch.randn(100, 3, requires_grad=True)
-        u = x[:, 0:1]**2 + x[:, 1:2]**2 + x[:, 2:3]**2
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2 + x[:, 2:3] ** 2
 
         d2u_dx2, d2u_dy2, d2u_dz2 = compute_hessian_diagonal(u, x)
 
@@ -182,7 +183,7 @@ class TestComputeHessianDiagonal:
     def test_laplacian_from_hessian_diagonal(self):
         """Test that sum of Hessian diagonal equals Laplacian."""
         x = torch.randn(100, 2, requires_grad=True)
-        u = x[:, 0:1]**3 + x[:, 1:2]**2
+        u = x[:, 0:1] ** 3 + x[:, 1:2] ** 2
 
         # Compute via Hessian diagonal
         d2u_dx2, d2u_dy2 = compute_hessian_diagonal(u, x)
@@ -213,7 +214,7 @@ class TestComputeMixedDerivative:
     def test_mixed_derivative_symmetry(self):
         """Test that mixed derivatives are symmetric."""
         x = torch.randn(100, 2, requires_grad=True)
-        u = x[:, 0:1]**2 * x[:, 1:2]**3
+        u = x[:, 0:1] ** 2 * x[:, 1:2] ** 3
 
         d2u_dxdy = compute_mixed_derivative(u, x, i=0, j=1)
         d2u_dydx = compute_mixed_derivative(u, x, i=1, j=0)
@@ -226,7 +227,7 @@ class TestComputeMixedDerivative:
         x = torch.randn(100, 2, requires_grad=True)
         # u = x^2 + y^2 (separable)
         # d2u/dxdy = 0
-        u = x[:, 0:1]**2 + x[:, 1:2]**2
+        u = x[:, 0:1] ** 2 + x[:, 1:2] ** 2
 
         d2u_dxdy = compute_mixed_derivative(u, x, i=0, j=1)
 
@@ -235,7 +236,7 @@ class TestComputeMixedDerivative:
     def test_index_out_of_bounds(self):
         """Test error for out-of-bounds indices."""
         x = torch.randn(100, 2, requires_grad=True)
-        u = x[:, 0:1]**2
+        u = x[:, 0:1] ** 2
 
         with pytest.raises(ValueError, match="out of bounds"):
             compute_mixed_derivative(u, x, i=0, j=2)
@@ -246,7 +247,7 @@ class TestComputeMixedDerivative:
     def test_same_index(self):
         """Test mixed derivative with same index (should be second derivative)."""
         x = torch.randn(100, 2, requires_grad=True)
-        u = x[:, 0:1]**2
+        u = x[:, 0:1] ** 2
 
         # d2u/dxdx should equal d2u/dx2
         d2u_dxdx = compute_mixed_derivative(u, x, i=0, j=0)
@@ -271,7 +272,9 @@ class TestDerivativesIntegration:
         laplacian = compute_derivatives(u, x, order=2)
 
         # Expected Laplacian
-        expected_laplacian = -2 * (math.pi**2) * torch.sin(math.pi * x[:, 0:1]) * torch.sin(math.pi * x[:, 1:2])
+        expected_laplacian = (
+            -2 * (math.pi**2) * torch.sin(math.pi * x[:, 0:1]) * torch.sin(math.pi * x[:, 1:2])
+        )
 
         assert torch.allclose(laplacian, expected_laplacian, rtol=1e-3)
 
@@ -289,7 +292,11 @@ class TestDerivativesIntegration:
 
         # Spatial Laplacian (using only x, y)
         x_spatial = x[:, :2].detach().requires_grad_(True)
-        u_spatial = torch.exp(-alpha * x[:, 2:3]) * torch.sin(x_spatial[:, 0:1]) * torch.sin(x_spatial[:, 1:2])
+        u_spatial = (
+            torch.exp(-alpha * x[:, 2:3])
+            * torch.sin(x_spatial[:, 0:1])
+            * torch.sin(x_spatial[:, 1:2])
+        )
         laplacian = compute_derivatives(u_spatial, x_spatial, order=2)
 
         # Residual: du/dt - α∇²u

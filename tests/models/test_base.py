@@ -17,9 +17,7 @@ class SimplePINN(BasePINN):
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 10):
         super().__init__(input_dim, output_dim)
         self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim),
-            nn.Tanh(),
-            nn.Linear(hidden_dim, output_dim)
+            nn.Linear(input_dim, hidden_dim), nn.Tanh(), nn.Linear(hidden_dim, output_dim)
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -74,10 +72,10 @@ class TestBasePINN:
         losses = model.train_step(x_interior, x_boundary, u_boundary)
 
         # Check loss dictionary structure
-        assert 'loss_total' in losses
-        assert 'loss_pde' in losses
-        assert 'loss_bc' in losses
-        assert 'loss_ic' in losses
+        assert "loss_total" in losses
+        assert "loss_pde" in losses
+        assert "loss_bc" in losses
+        assert "loss_ic" in losses
 
         # Check loss values are valid
         for key, value in losses.items():
@@ -97,12 +95,11 @@ class TestBasePINN:
         u_initial = torch.randn(50, 1)
 
         losses = model.train_step(
-            x_interior, x_boundary, u_boundary,
-            x_initial=x_initial, u_initial=u_initial
+            x_interior, x_boundary, u_boundary, x_initial=x_initial, u_initial=u_initial
         )
 
         # IC loss should be non-zero
-        assert losses['loss_ic'] > 0
+        assert losses["loss_ic"] > 0
 
     def test_train_step_custom_weights(self):
         """Test train_step with custom loss weights."""
@@ -112,18 +109,12 @@ class TestBasePINN:
         x_boundary = torch.randn(40, 2)
         u_boundary = torch.randn(40, 1)
 
-        weights = {'pde': 2.0, 'bc': 0.5, 'ic': 0.0}
-        losses = model.train_step(
-            x_interior, x_boundary, u_boundary,
-            weights=weights
-        )
+        weights = {"pde": 2.0, "bc": 0.5, "ic": 0.0}
+        losses = model.train_step(x_interior, x_boundary, u_boundary, weights=weights)
 
         # Total loss should reflect custom weighting
-        expected_total = (
-            weights['pde'] * losses['loss_pde'] +
-            weights['bc'] * losses['loss_bc']
-        )
-        assert torch.allclose(losses['loss_total'], expected_total)
+        expected_total = weights["pde"] * losses["loss_pde"] + weights["bc"] * losses["loss_bc"]
+        assert torch.allclose(losses["loss_total"], expected_total)
 
     def test_get_parameters_count(self):
         """Test parameter counting."""
@@ -142,7 +133,7 @@ class TestBasePINN:
         u_boundary = torch.randn(20, 1)
 
         losses = model.train_step(x_interior, x_boundary, u_boundary)
-        loss = losses['loss_total']
+        loss = losses["loss_total"]
 
         # Backpropagate
         loss.backward()
@@ -157,10 +148,10 @@ class TestBasePINN:
         model = SimplePINN(input_dim=2, output_dim=1)
         repr_str = repr(model)
 
-        assert 'SimplePINN' in repr_str
-        assert 'input_dim=2' in repr_str
-        assert 'output_dim=1' in repr_str
-        assert 'parameters' in repr_str
+        assert "SimplePINN" in repr_str
+        assert "input_dim=2" in repr_str
+        assert "output_dim=1" in repr_str
+        assert "parameters" in repr_str
 
 
 class TestBasePINNAbstract:

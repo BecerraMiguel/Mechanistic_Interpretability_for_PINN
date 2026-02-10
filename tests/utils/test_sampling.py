@@ -14,10 +14,10 @@ import pytest
 import torch
 
 from src.utils.sampling import (
+    BoundarySampler,
+    GridSampler,
     LatinHypercubeSampler,
     UniformRandomSampler,
-    GridSampler,
-    BoundarySampler,
     sample_collocation_points,
 )
 

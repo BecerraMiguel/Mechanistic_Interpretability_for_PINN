@@ -10,4 +10,4 @@ Neural Networks, including:
 from .base import BasePINN
 from .mlp import MLP
 
-__all__ = ['BasePINN', 'MLP']
+__all__ = ["BasePINN", "MLP"]

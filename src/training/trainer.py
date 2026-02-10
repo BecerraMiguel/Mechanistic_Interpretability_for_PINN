@@ -12,15 +12,15 @@ This module provides a flexible trainer for PINNs with:
 - Solution visualization (heatmaps)
 """
 
-from typing import Dict, Optional, Callable, Tuple
-import time
 import os
+import time
+from typing import Callable, Dict, Optional, Tuple
 
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import numpy as np
-import matplotlib.pyplot as plt
 
 from src.utils.derivatives import compute_derivatives
 
@@ -118,7 +118,7 @@ class PINNTrainer:
         }
 
         # Early stopping state
-        self.best_val_error = float('inf')
+        self.best_val_error = float("inf")
         self.patience_counter = 0
         self.best_model_state = None
 
@@ -143,9 +143,7 @@ class PINNTrainer:
             Initial condition points (for time-dependent PDEs).
         """
         # Sample interior points
-        x_interior = self.problem.sample_interior_points(
-            n=self.n_interior, random_seed=random_seed
-        )
+        x_interior = self.problem.sample_interior_points(n=self.n_interior, random_seed=random_seed)
 
         # Sample boundary points
         x_boundary = self.problem.sample_boundary_points(
@@ -201,7 +199,7 @@ class PINNTrainer:
 
         # Compute PDE residual
         residual = self.problem.pde_residual(u_interior, x_interior, du_dx, d2u_dx2)
-        loss_pde = torch.mean(residual ** 2)
+        loss_pde = torch.mean(residual**2)
 
         # --- Boundary Condition Loss ---
         u_boundary = self.model(x_boundary)
@@ -230,7 +228,10 @@ class PINNTrainer:
         }
 
     def train_step(
-        self, x_interior: torch.Tensor, x_boundary: torch.Tensor, x_initial: Optional[torch.Tensor] = None
+        self,
+        x_interior: torch.Tensor,
+        x_boundary: torch.Tensor,
+        x_initial: Optional[torch.Tensor] = None,
     ) -> Dict[str, float]:
         """
         Perform a single training step.
@@ -405,6 +406,7 @@ class PINNTrainer:
                     log_dict["relative_l2_error"] = rel_error
 
                 import wandb
+
                 wandb.log(log_dict)
 
             # Print progress
@@ -442,6 +444,7 @@ class PINNTrainer:
 
         if self.use_wandb:
             import wandb
+
             wandb.log({"final_relative_l2_error": final_error})
             wandb.finish()
 
@@ -523,17 +526,11 @@ class PINNTrainer:
 
         # Check if problem is 2D
         if self.problem.spatial_dim != 2:
-            raise NotImplementedError(
-                "Visualization currently only supports 2D problems"
-            )
+            raise NotImplementedError("Visualization currently only supports 2D problems")
 
         # Create evaluation grid
-        x = torch.linspace(
-            self.problem.domain[0][0], self.problem.domain[0][1], n_points
-        )
-        y = torch.linspace(
-            self.problem.domain[1][0], self.problem.domain[1][1], n_points
-        )
+        x = torch.linspace(self.problem.domain[0][0], self.problem.domain[0][1], n_points)
+        y = torch.linspace(self.problem.domain[1][0], self.problem.domain[1][1], n_points)
         X, Y = torch.meshgrid(x, y, indexing="ij")
         grid_points = torch.stack([X.flatten(), Y.flatten()], dim=1).to(self.device)
 
@@ -543,10 +540,7 @@ class PINNTrainer:
 
         # Compute analytical solution
         u_exact = (
-            self.problem.analytical_solution(grid_points)
-            .cpu()
-            .numpy()
-            .reshape(n_points, n_points)
+            self.problem.analytical_solution(grid_points).cpu().numpy().reshape(n_points, n_points)
         )
 
         # Compute error
@@ -600,6 +594,7 @@ class PINNTrainer:
         if self.use_wandb:
             try:
                 import wandb
+
                 wandb.log({"solution_heatmap": wandb.Image(save_path)})
             except ImportError:
                 pass

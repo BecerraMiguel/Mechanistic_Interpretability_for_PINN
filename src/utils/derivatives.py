@@ -6,15 +6,12 @@ of neural network outputs using PyTorch's automatic differentiation.
 All derivatives are computed via torch.autograd.grad().
 """
 
-from typing import Tuple, Optional
+from typing import Optional, Tuple
+
 import torch
 
 
-def compute_derivatives(
-    u: torch.Tensor,
-    x: torch.Tensor,
-    order: int = 1
-) -> torch.Tensor:
+def compute_derivatives(u: torch.Tensor, x: torch.Tensor, order: int = 1) -> torch.Tensor:
     """
     Compute spatial derivatives of network output using automatic differentiation.
 
@@ -59,7 +56,7 @@ def compute_derivatives(
             inputs=x,
             grad_outputs=torch.ones_like(u),
             create_graph=True,  # Needed for second-order derivatives
-            retain_graph=True
+            retain_graph=True,
         )[0]
         return grad  # shape (N, input_dim)
 
@@ -71,29 +68,28 @@ def compute_derivatives(
             inputs=x,
             grad_outputs=torch.ones_like(u),
             create_graph=True,
-            retain_graph=True
+            retain_graph=True,
         )[0]
 
         # Then compute second-order derivatives for each dimension
         laplacian = torch.zeros((x.shape[0], 1), device=x.device)
         for i in range(x.shape[1]):
-            grad_i = grad[:, i:i+1]  # ∂u/∂xᵢ
+            grad_i = grad[:, i : i + 1]  # ∂u/∂xᵢ
             grad2_ii = torch.autograd.grad(
                 outputs=grad_i,
                 inputs=x,
                 grad_outputs=torch.ones_like(grad_i),
                 create_graph=True,
-                retain_graph=True
-            )[0][:, i:i+1]  # ∂²u/∂xᵢ²
+                retain_graph=True,
+            )[0][
+                :, i : i + 1
+            ]  # ∂²u/∂xᵢ²
             laplacian += grad2_ii
 
         return laplacian  # shape (N, 1)
 
 
-def compute_gradient_components(
-    u: torch.Tensor,
-    x: torch.Tensor
-) -> Tuple[torch.Tensor, ...]:
+def compute_gradient_components(u: torch.Tensor, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
     """
     Compute individual gradient components ∂u/∂xᵢ for each dimension.
 
@@ -120,22 +116,15 @@ def compute_gradient_components(
 
     # Compute full gradient
     grad = torch.autograd.grad(
-        outputs=u,
-        inputs=x,
-        grad_outputs=torch.ones_like(u),
-        create_graph=True,
-        retain_graph=True
+        outputs=u, inputs=x, grad_outputs=torch.ones_like(u), create_graph=True, retain_graph=True
     )[0]
 
     # Split into individual components
-    components = tuple(grad[:, i:i+1] for i in range(x.shape[1]))
+    components = tuple(grad[:, i : i + 1] for i in range(x.shape[1]))
     return components
 
 
-def compute_hessian_diagonal(
-    u: torch.Tensor,
-    x: torch.Tensor
-) -> Tuple[torch.Tensor, ...]:
+def compute_hessian_diagonal(u: torch.Tensor, x: torch.Tensor) -> Tuple[torch.Tensor, ...]:
     """
     Compute diagonal elements of the Hessian matrix: ∂²u/∂xᵢ².
 
@@ -162,35 +151,26 @@ def compute_hessian_diagonal(
 
     # First compute first-order derivatives
     grad = torch.autograd.grad(
-        outputs=u,
-        inputs=x,
-        grad_outputs=torch.ones_like(u),
-        create_graph=True,
-        retain_graph=True
+        outputs=u, inputs=x, grad_outputs=torch.ones_like(u), create_graph=True, retain_graph=True
     )[0]
 
     # Compute second-order derivatives for each dimension
     hessian_diag = []
     for i in range(x.shape[1]):
-        grad_i = grad[:, i:i+1]
+        grad_i = grad[:, i : i + 1]
         grad2_ii = torch.autograd.grad(
             outputs=grad_i,
             inputs=x,
             grad_outputs=torch.ones_like(grad_i),
             create_graph=True,
-            retain_graph=True
-        )[0][:, i:i+1]
+            retain_graph=True,
+        )[0][:, i : i + 1]
         hessian_diag.append(grad2_ii)
 
     return tuple(hessian_diag)
 
 
-def compute_mixed_derivative(
-    u: torch.Tensor,
-    x: torch.Tensor,
-    i: int,
-    j: int
-) -> torch.Tensor:
+def compute_mixed_derivative(u: torch.Tensor, x: torch.Tensor, i: int, j: int) -> torch.Tensor:
     """
     Compute a specific mixed second derivative ∂²u/∂xᵢ∂xⱼ.
 
@@ -214,20 +194,14 @@ def compute_mixed_derivative(
         )
 
     if i < 0 or i >= x.shape[1] or j < 0 or j >= x.shape[1]:
-        raise ValueError(
-            f"Indices i={i}, j={j} out of bounds for input_dim={x.shape[1]}"
-        )
+        raise ValueError(f"Indices i={i}, j={j} out of bounds for input_dim={x.shape[1]}")
 
     # First compute ∂u/∂xᵢ
     grad = torch.autograd.grad(
-        outputs=u,
-        inputs=x,
-        grad_outputs=torch.ones_like(u),
-        create_graph=True,
-        retain_graph=True
+        outputs=u, inputs=x, grad_outputs=torch.ones_like(u), create_graph=True, retain_graph=True
     )[0]
 
-    grad_i = grad[:, i:i+1]
+    grad_i = grad[:, i : i + 1]
 
     # Then compute ∂/∂xⱼ(∂u/∂xᵢ) = ∂²u/∂xᵢ∂xⱼ
     grad2_ij = torch.autograd.grad(
@@ -235,7 +209,7 @@ def compute_mixed_derivative(
         inputs=x,
         grad_outputs=torch.ones_like(grad_i),
         create_graph=True,
-        retain_graph=True
-    )[0][:, j:j+1]
+        retain_graph=True,
+    )[0][:, j : j + 1]
 
     return grad2_ij

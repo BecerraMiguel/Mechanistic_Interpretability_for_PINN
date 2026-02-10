@@ -41,14 +41,14 @@ class TestMLPInitialization:
 
     def test_custom_activation(self):
         """Test MLP with custom activation function."""
-        for activation in ['tanh', 'relu', 'gelu', 'sin']:
+        for activation in ["tanh", "relu", "gelu", "sin"]:
             model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation=activation)
             assert model.activation_name == activation
 
     def test_invalid_activation(self):
         """Test that invalid activation raises error."""
         with pytest.raises(ValueError, match="not supported"):
-            MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation='invalid')
+            MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation="invalid")
 
     def test_parameter_count(self):
         """Test parameter counting."""
@@ -122,10 +122,10 @@ class TestMLPActivations:
 
         activations = model.get_activations()
 
-        assert 'layer_0' in activations
-        assert 'layer_1' in activations
-        assert activations['layer_0'].shape == (100, 50)
-        assert activations['layer_1'].shape == (100, 30)
+        assert "layer_0" in activations
+        assert "layer_1" in activations
+        assert activations["layer_0"].shape == (100, 50)
+        assert activations["layer_1"].shape == (100, 30)
 
     def test_activation_cleared_between_passes(self):
         """Test that activations are cleared between forward passes."""
@@ -142,7 +142,7 @@ class TestMLPActivations:
         act2 = model.get_activations()
 
         # Activations should be different
-        assert not torch.allclose(act1['layer_0'], act2['layer_0'])
+        assert not torch.allclose(act1["layer_0"], act2["layer_0"])
 
     def test_activation_storage_independent(self):
         """Test that get_activations returns a copy."""
@@ -154,7 +154,7 @@ class TestMLPActivations:
         act2 = model.get_activations()
 
         # Should be equal but not the same object
-        assert torch.allclose(act1['layer_0'], act2['layer_0'])
+        assert torch.allclose(act1["layer_0"], act2["layer_0"])
         assert act1 is not act2  # Different dictionary objects
 
     def test_no_activation_for_output_layer(self):
@@ -167,7 +167,7 @@ class TestMLPActivations:
 
         # Should only have layer_0 and layer_1, not layer_2 (output)
         assert len(activations) == 2
-        assert 'layer_2' not in activations
+        assert "layer_2" not in activations
 
 
 class TestMLPActivationFunctions:
@@ -175,27 +175,27 @@ class TestMLPActivationFunctions:
 
     def test_tanh_activation(self):
         """Test tanh activation function."""
-        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation='tanh')
+        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation="tanh")
         x = torch.randn(100, 2)
         u = model(x)
 
         # tanh output should be bounded
         activations = model.get_activations()
-        assert (activations['layer_0'].abs() <= 1).all()
+        assert (activations["layer_0"].abs() <= 1).all()
 
     def test_relu_activation(self):
         """Test ReLU activation function."""
-        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation='relu')
+        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation="relu")
         x = torch.randn(100, 2)
         u = model(x)
 
         # ReLU output should be non-negative
         activations = model.get_activations()
-        assert (activations['layer_0'] >= 0).all()
+        assert (activations["layer_0"] >= 0).all()
 
     def test_gelu_activation(self):
         """Test GELU activation function."""
-        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation='gelu')
+        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation="gelu")
         x = torch.randn(100, 2)
         u = model(x)
 
@@ -204,13 +204,13 @@ class TestMLPActivationFunctions:
 
     def test_sin_activation(self):
         """Test sin activation function."""
-        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation='sin')
+        model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation="sin")
         x = torch.randn(100, 2)
         u = model(x)
 
         # sin output should be bounded
         activations = model.get_activations()
-        assert (activations['layer_0'].abs() <= 1).all()
+        assert (activations["layer_0"].abs() <= 1).all()
 
 
 class TestMLPGradients:
@@ -242,11 +242,7 @@ class TestMLPGradients:
         # Compute du/dx
         grad_outputs = torch.ones_like(u)
         du_dx = torch.autograd.grad(
-            outputs=u,
-            inputs=x,
-            grad_outputs=grad_outputs,
-            create_graph=True,
-            retain_graph=True
+            outputs=u, inputs=x, grad_outputs=grad_outputs, create_graph=True, retain_graph=True
         )[0]
 
         assert du_dx.shape == (100, 2)
@@ -264,7 +260,7 @@ class TestMLPGradients:
             inputs=x,
             grad_outputs=torch.ones_like(u),
             create_graph=True,
-            retain_graph=True
+            retain_graph=True,
         )[0]
 
         # Second derivative (just first component)
@@ -273,7 +269,7 @@ class TestMLPGradients:
             inputs=x,
             grad_outputs=torch.ones_like(du_dx[:, 0:1]),
             create_graph=True,
-            retain_graph=True
+            retain_graph=True,
         )[0]
 
         assert d2u_dx2.shape == (100, 2)
@@ -347,15 +343,15 @@ class TestMLPUtilityMethods:
 
     def test_repr(self):
         """Test string representation."""
-        model = MLP(input_dim=2, hidden_dims=[50, 50], output_dim=1, activation='tanh')
+        model = MLP(input_dim=2, hidden_dims=[50, 50], output_dim=1, activation="tanh")
         repr_str = repr(model)
 
-        assert 'MLP' in repr_str
-        assert 'input_dim=2' in repr_str
-        assert 'hidden_dims=[50, 50]' in repr_str
-        assert 'output_dim=1' in repr_str
-        assert 'activation=tanh' in repr_str
-        assert 'parameters' in repr_str
+        assert "MLP" in repr_str
+        assert "input_dim=2" in repr_str
+        assert "hidden_dims=[50, 50]" in repr_str
+        assert "output_dim=1" in repr_str
+        assert "activation=tanh" in repr_str
+        assert "parameters" in repr_str
 
 
 class TestMLPIntegration:
@@ -371,9 +367,9 @@ class TestMLPIntegration:
 
         losses = model.train_step(x_interior, x_boundary, u_boundary)
 
-        assert losses['loss_total'] >= 0
-        assert losses['loss_pde'] >= 0
-        assert losses['loss_bc'] >= 0
+        assert losses["loss_total"] >= 0
+        assert losses["loss_pde"] >= 0
+        assert losses["loss_bc"] >= 0
 
     def test_training_reduces_loss(self):
         """Test that training actually reduces loss."""
@@ -386,18 +382,18 @@ class TestMLPIntegration:
 
         # Initial loss
         losses_initial = model.train_step(x_interior, x_boundary, u_boundary)
-        loss_initial = losses_initial['loss_total'].item()
+        loss_initial = losses_initial["loss_total"].item()
 
         # Train for a few steps
         for _ in range(10):
             optimizer.zero_grad()
             losses = model.train_step(x_interior, x_boundary, u_boundary)
-            losses['loss_total'].backward()
+            losses["loss_total"].backward()
             optimizer.step()
 
         # Final loss
         losses_final = model.train_step(x_interior, x_boundary, u_boundary)
-        loss_final = losses_final['loss_total'].item()
+        loss_final = losses_final["loss_total"].item()
 
         # Loss should decrease (at least a little bit)
         assert loss_final < loss_initial

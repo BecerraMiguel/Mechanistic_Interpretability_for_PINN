@@ -10,8 +10,8 @@ This module provides various sampling strategies for generating collocation poin
 These samplers can be used by any PDE problem for training and evaluation.
 """
 
-from typing import Tuple, Optional, List
 from abc import ABC, abstractmethod
+from typing import List, Optional, Tuple
 
 import torch
 from scipy.stats import qmc
@@ -196,7 +196,7 @@ class GridSampler(CollocationSampler):
             grids_1d.append(torch.linspace(low, high, n_per_dim))
 
         # Create meshgrid
-        meshgrids = torch.meshgrid(*grids_1d, indexing='ij')
+        meshgrids = torch.meshgrid(*grids_1d, indexing="ij")
 
         # Flatten and stack
         points = torch.stack([g.flatten() for g in meshgrids], dim=1)
@@ -249,13 +249,9 @@ class BoundarySampler:
         elif spatial_dim == 3:
             return self._sample_3d(n_per_edge, domain, random_seed)
         else:
-            raise NotImplementedError(
-                f"Boundary sampling not implemented for {spatial_dim}D"
-            )
+            raise NotImplementedError(f"Boundary sampling not implemented for {spatial_dim}D")
 
-    def _sample_1d(
-        self, n_per_edge: int, domain: Tuple[Tuple[float, float], ...]
-    ) -> torch.Tensor:
+    def _sample_1d(self, n_per_edge: int, domain: Tuple[Tuple[float, float], ...]) -> torch.Tensor:
         """Sample boundary points for 1D domain (just the two endpoints)."""
         x_min, x_max = domain[0]
         return torch.tensor([[x_min], [x_max]], dtype=torch.float32)
@@ -319,54 +315,42 @@ class BoundarySampler:
         boundary_points = []
 
         # Face 1: z = z_min
-        X, Y = torch.meshgrid(x_points, y_points, indexing='ij')
-        face1 = torch.stack([
-            X.flatten(),
-            Y.flatten(),
-            torch.full((n_per_face * n_per_face,), z_min)
-        ], dim=1)
+        X, Y = torch.meshgrid(x_points, y_points, indexing="ij")
+        face1 = torch.stack(
+            [X.flatten(), Y.flatten(), torch.full((n_per_face * n_per_face,), z_min)], dim=1
+        )
         boundary_points.append(face1)
 
         # Face 2: z = z_max
-        face2 = torch.stack([
-            X.flatten(),
-            Y.flatten(),
-            torch.full((n_per_face * n_per_face,), z_max)
-        ], dim=1)
+        face2 = torch.stack(
+            [X.flatten(), Y.flatten(), torch.full((n_per_face * n_per_face,), z_max)], dim=1
+        )
         boundary_points.append(face2)
 
         # Face 3: y = y_min
-        X, Z = torch.meshgrid(x_points, z_points, indexing='ij')
-        face3 = torch.stack([
-            X.flatten(),
-            torch.full((n_per_face * n_per_face,), y_min),
-            Z.flatten()
-        ], dim=1)
+        X, Z = torch.meshgrid(x_points, z_points, indexing="ij")
+        face3 = torch.stack(
+            [X.flatten(), torch.full((n_per_face * n_per_face,), y_min), Z.flatten()], dim=1
+        )
         boundary_points.append(face3)
 
         # Face 4: y = y_max
-        face4 = torch.stack([
-            X.flatten(),
-            torch.full((n_per_face * n_per_face,), y_max),
-            Z.flatten()
-        ], dim=1)
+        face4 = torch.stack(
+            [X.flatten(), torch.full((n_per_face * n_per_face,), y_max), Z.flatten()], dim=1
+        )
         boundary_points.append(face4)
 
         # Face 5: x = x_min
-        Y, Z = torch.meshgrid(y_points, z_points, indexing='ij')
-        face5 = torch.stack([
-            torch.full((n_per_face * n_per_face,), x_min),
-            Y.flatten(),
-            Z.flatten()
-        ], dim=1)
+        Y, Z = torch.meshgrid(y_points, z_points, indexing="ij")
+        face5 = torch.stack(
+            [torch.full((n_per_face * n_per_face,), x_min), Y.flatten(), Z.flatten()], dim=1
+        )
         boundary_points.append(face5)
 
         # Face 6: x = x_max
-        face6 = torch.stack([
-            torch.full((n_per_face * n_per_face,), x_max),
-            Y.flatten(),
-            Z.flatten()
-        ], dim=1)
+        face6 = torch.stack(
+            [torch.full((n_per_face * n_per_face,), x_max), Y.flatten(), Z.flatten()], dim=1
+        )
         boundary_points.append(face6)
 
         return torch.cat(boundary_points, dim=0)

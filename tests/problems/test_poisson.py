@@ -106,12 +106,14 @@ class TestPoissonAnalyticalSolution:
         problem = PoissonProblem()
 
         # Test boundary points
-        boundary_points = torch.tensor([
-            [0.0, 0.5],  # Left edge
-            [1.0, 0.5],  # Right edge
-            [0.5, 0.0],  # Bottom edge
-            [0.5, 1.0],  # Top edge
-        ])
+        boundary_points = torch.tensor(
+            [
+                [0.0, 0.5],  # Left edge
+                [1.0, 0.5],  # Right edge
+                [0.5, 0.0],  # Bottom edge
+                [0.5, 1.0],  # Top edge
+            ]
+        )
 
         u = problem.analytical_solution(boundary_points)
         assert torch.allclose(u, torch.zeros(4, 1), atol=1e-6)
@@ -143,7 +145,7 @@ class TestPoissonSourceTerm:
         # Test at (0.5, 0.5) -> f = -2π²sin(π/2)sin(π/2) = -2π²
         x = torch.tensor([[0.5, 0.5]])
         f = problem.source_term(x)
-        expected = -2 * (math.pi ** 2)
+        expected = -2 * (math.pi**2)
         assert torch.isclose(f, torch.tensor([[expected]]), atol=1e-5)
 
         # Test at (0, 0) -> f = -2π²sin(0)sin(0) = 0

@@ -6,12 +6,13 @@ multiple activation function options, and activation extraction capabilities
 for mechanistic interpretability analysis.
 """
 
-from typing import Dict, List, Optional, Callable
+from typing import Callable, Dict, List, Optional
+
 import torch
 import torch.nn as nn
 
-from .base import BasePINN
 from ..utils.derivatives import compute_derivatives
+from .base import BasePINN
 
 
 class MLP(BasePINN):
@@ -36,11 +37,7 @@ class MLP(BasePINN):
     """
 
     def __init__(
-        self,
-        input_dim: int,
-        hidden_dims: List[int],
-        output_dim: int = 1,
-        activation: str = "tanh"
+        self, input_dim: int, hidden_dims: List[int], output_dim: int = 1, activation: str = "tanh"
     ):
         """
         Initialize the MLP PINN.
@@ -92,10 +89,10 @@ class MLP(BasePINN):
             ValueError: If activation function is not supported
         """
         activation_map = {
-            'tanh': torch.tanh,
-            'relu': torch.relu,
-            'gelu': torch.nn.functional.gelu,
-            'sin': torch.sin,
+            "tanh": torch.tanh,
+            "relu": torch.relu,
+            "gelu": torch.nn.functional.gelu,
+            "sin": torch.sin,
         }
 
         if activation.lower() not in activation_map:
@@ -181,9 +178,7 @@ class MLP(BasePINN):
         return self.activations.copy()
 
     def compute_pde_residual(
-        self,
-        x: torch.Tensor,
-        pde_fn: Optional[Callable] = None
+        self, x: torch.Tensor, pde_fn: Optional[Callable] = None
     ) -> torch.Tensor:
         """
         Compute the PDE residual at given collocation points.
@@ -215,9 +210,7 @@ class MLP(BasePINN):
             >>> residual = model.compute_pde_residual(x, pde_fn=poisson_pde)
         """
         if not x.requires_grad:
-            raise ValueError(
-                "Input x must have requires_grad=True for PDE residual computation"
-            )
+            raise ValueError("Input x must have requires_grad=True for PDE residual computation")
 
         # Compute network output
         u = self.forward(x)

@@ -7,7 +7,8 @@ computation, and training.
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
+
 import torch
 import torch.nn as nn
 
@@ -59,9 +60,7 @@ class BasePINN(nn.Module, ABC):
 
     @abstractmethod
     def compute_pde_residual(
-        self,
-        x: torch.Tensor,
-        pde_fn: Optional[callable] = None
+        self, x: torch.Tensor, pde_fn: Optional[callable] = None
     ) -> torch.Tensor:
         """
         Compute the PDE residual N[u](x) at given points.
@@ -91,7 +90,7 @@ class BasePINN(nn.Module, ABC):
         x_initial: Optional[torch.Tensor] = None,
         u_initial: Optional[torch.Tensor] = None,
         pde_fn: Optional[callable] = None,
-        weights: Optional[Dict[str, float]] = None
+        weights: Optional[Dict[str, float]] = None,
     ) -> Dict[str, torch.Tensor]:
         """
         Perform a single training step, computing all loss components.
@@ -116,11 +115,11 @@ class BasePINN(nn.Module, ABC):
                 - 'loss_ic': Initial condition loss (0 if not applicable)
         """
         if weights is None:
-            weights = {'pde': 1.0, 'bc': 1.0, 'ic': 1.0}
+            weights = {"pde": 1.0, "bc": 1.0, "ic": 1.0}
 
         # PDE residual loss
         residual = self.compute_pde_residual(x_interior, pde_fn)
-        loss_pde = torch.mean(residual ** 2)
+        loss_pde = torch.mean(residual**2)
 
         # Boundary condition loss
         u_pred_bc = self.forward(x_boundary)
@@ -133,17 +132,13 @@ class BasePINN(nn.Module, ABC):
             loss_ic = torch.mean((u_pred_ic - u_initial) ** 2)
 
         # Total weighted loss
-        loss_total = (
-            weights['pde'] * loss_pde +
-            weights['bc'] * loss_bc +
-            weights['ic'] * loss_ic
-        )
+        loss_total = weights["pde"] * loss_pde + weights["bc"] * loss_bc + weights["ic"] * loss_ic
 
         return {
-            'loss_total': loss_total,
-            'loss_pde': loss_pde,
-            'loss_bc': loss_bc,
-            'loss_ic': loss_ic
+            "loss_total": loss_total,
+            "loss_pde": loss_pde,
+            "loss_bc": loss_bc,
+            "loss_ic": loss_ic,
         }
 
     def get_parameters_count(self) -> int:

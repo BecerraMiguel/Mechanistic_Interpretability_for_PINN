@@ -135,10 +135,7 @@ class BaseProblem(ABC):
         pass
 
     def compute_relative_l2_error(
-        self,
-        model: torch.nn.Module,
-        n_test_points: int = 10000,
-        random_seed: int = 42
+        self, model: torch.nn.Module, n_test_points: int = 10000, random_seed: int = 42
     ) -> float:
         """
         Compute the relative L2 error between model prediction and analytical solution.
