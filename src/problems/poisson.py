@@ -268,6 +268,214 @@ class PoissonProblem(BaseProblem):
 
         return residual
 
+    def analytical_derivative_du_dx(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute analytical first derivative ∂u/∂x = π·cos(πx)·sin(πy).
+
+        This is the ground-truth derivative computed from the analytical solution
+        u(x,y) = sin(πx)sin(πy). Used for training probing classifiers.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input coordinates of shape (N, 2).
+
+        Returns
+        -------
+        torch.Tensor
+            First derivative ∂u/∂x values of shape (N, 1).
+
+        Examples
+        --------
+        >>> problem = PoissonProblem()
+        >>> x = torch.tensor([[0.5, 0.5], [0.25, 0.75]])
+        >>> du_dx = problem.analytical_derivative_du_dx(x)
+        """
+        if x.shape[1] != 2:
+            raise ValueError(f"Expected input of shape (N, 2), got {x.shape}")
+
+        x_coord = x[:, 0:1]  # (N, 1)
+        y_coord = x[:, 1:2]  # (N, 1)
+
+        # ∂u/∂x = ∂/∂x[sin(πx)sin(πy)] = π·cos(πx)·sin(πy)
+        du_dx = math.pi * torch.cos(math.pi * x_coord) * torch.sin(math.pi * y_coord)
+        return du_dx
+
+    def analytical_derivative_du_dy(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute analytical first derivative ∂u/∂y = π·sin(πx)·cos(πy).
+
+        This is the ground-truth derivative computed from the analytical solution
+        u(x,y) = sin(πx)sin(πy). Used for training probing classifiers.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input coordinates of shape (N, 2).
+
+        Returns
+        -------
+        torch.Tensor
+            First derivative ∂u/∂y values of shape (N, 1).
+
+        Examples
+        --------
+        >>> problem = PoissonProblem()
+        >>> x = torch.tensor([[0.5, 0.5], [0.25, 0.75]])
+        >>> du_dy = problem.analytical_derivative_du_dy(x)
+        """
+        if x.shape[1] != 2:
+            raise ValueError(f"Expected input of shape (N, 2), got {x.shape}")
+
+        x_coord = x[:, 0:1]  # (N, 1)
+        y_coord = x[:, 1:2]  # (N, 1)
+
+        # ∂u/∂y = ∂/∂y[sin(πx)sin(πy)] = π·sin(πx)·cos(πy)
+        du_dy = math.pi * torch.sin(math.pi * x_coord) * torch.cos(math.pi * y_coord)
+        return du_dy
+
+    def analytical_derivative_d2u_dx2(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute analytical second derivative ∂²u/∂x² = -π²·sin(πx)·sin(πy).
+
+        This is the ground-truth second derivative computed from the analytical solution
+        u(x,y) = sin(πx)sin(πy). Used for training probing classifiers.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input coordinates of shape (N, 2).
+
+        Returns
+        -------
+        torch.Tensor
+            Second derivative ∂²u/∂x² values of shape (N, 1).
+
+        Examples
+        --------
+        >>> problem = PoissonProblem()
+        >>> x = torch.tensor([[0.5, 0.5], [0.25, 0.75]])
+        >>> d2u_dx2 = problem.analytical_derivative_d2u_dx2(x)
+        """
+        if x.shape[1] != 2:
+            raise ValueError(f"Expected input of shape (N, 2), got {x.shape}")
+
+        x_coord = x[:, 0:1]  # (N, 1)
+        y_coord = x[:, 1:2]  # (N, 1)
+
+        # ∂²u/∂x² = ∂/∂x[π·cos(πx)·sin(πy)] = -π²·sin(πx)·sin(πy)
+        d2u_dx2 = -(math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(
+            math.pi * y_coord
+        )
+        return d2u_dx2
+
+    def analytical_derivative_d2u_dy2(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute analytical second derivative ∂²u/∂y² = -π²·sin(πx)·sin(πy).
+
+        This is the ground-truth second derivative computed from the analytical solution
+        u(x,y) = sin(πx)sin(πy). Used for training probing classifiers.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input coordinates of shape (N, 2).
+
+        Returns
+        -------
+        torch.Tensor
+            Second derivative ∂²u/∂y² values of shape (N, 1).
+
+        Examples
+        --------
+        >>> problem = PoissonProblem()
+        >>> x = torch.tensor([[0.5, 0.5], [0.25, 0.75]])
+        >>> d2u_dy2 = problem.analytical_derivative_d2u_dy2(x)
+        """
+        if x.shape[1] != 2:
+            raise ValueError(f"Expected input of shape (N, 2), got {x.shape}")
+
+        x_coord = x[:, 0:1]  # (N, 1)
+        y_coord = x[:, 1:2]  # (N, 1)
+
+        # ∂²u/∂y² = ∂/∂y[π·sin(πx)·cos(πy)] = -π²·sin(πx)·sin(πy)
+        d2u_dy2 = -(math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(
+            math.pi * y_coord
+        )
+        return d2u_dy2
+
+    def analytical_laplacian(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute analytical Laplacian ∇²u = ∂²u/∂x² + ∂²u/∂y² = -2π²·sin(πx)·sin(πy).
+
+        This is the ground-truth Laplacian computed from the analytical solution
+        u(x,y) = sin(πx)sin(πy). Note that this equals -source_term(x).
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input coordinates of shape (N, 2).
+
+        Returns
+        -------
+        torch.Tensor
+            Laplacian ∇²u values of shape (N, 1).
+
+        Notes
+        -----
+        The Laplacian equals the sum of second derivatives:
+        ∇²u = ∂²u/∂x² + ∂²u/∂y² = -π²·sin(πx)·sin(πy) + (-π²·sin(πx)·sin(πy))
+            = -2π²·sin(πx)·sin(πy)
+
+        This also equals -source_term(x) by construction.
+
+        Examples
+        --------
+        >>> problem = PoissonProblem()
+        >>> x = torch.tensor([[0.5, 0.5], [0.25, 0.75]])
+        >>> laplacian = problem.analytical_laplacian(x)
+        """
+        if x.shape[1] != 2:
+            raise ValueError(f"Expected input of shape (N, 2), got {x.shape}")
+
+        x_coord = x[:, 0:1]  # (N, 1)
+        y_coord = x[:, 1:2]  # (N, 1)
+
+        # ∇²u = -2π²·sin(πx)·sin(πy)
+        laplacian = -2.0 * (math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(
+            math.pi * y_coord
+        )
+        return laplacian
+
+    def analytical_gradient(self, x: torch.Tensor) -> torch.Tensor:
+        """
+        Compute analytical gradient ∇u = (∂u/∂x, ∂u/∂y).
+
+        Returns both first-order derivatives as a single tensor. Convenience method
+        that calls analytical_derivative_du_dx and analytical_derivative_du_dy.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input coordinates of shape (N, 2).
+
+        Returns
+        -------
+        torch.Tensor
+            Gradient values of shape (N, 2), where:
+            - Column 0: ∂u/∂x = π·cos(πx)·sin(πy)
+            - Column 1: ∂u/∂y = π·sin(πx)·cos(πy)
+
+        Examples
+        --------
+        >>> problem = PoissonProblem()
+        >>> x = torch.tensor([[0.5, 0.5], [0.25, 0.75]])
+        >>> gradient = problem.analytical_gradient(x)  # Shape: (2, 2)
+        """
+        du_dx = self.analytical_derivative_du_dx(x)
+        du_dy = self.analytical_derivative_du_dy(x)
+        return torch.cat([du_dx, du_dy], dim=1)
+
     def __repr__(self) -> str:
         """String representation of the Poisson problem."""
         return (
