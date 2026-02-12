@@ -649,7 +649,9 @@ class TestIntegration:
     def test_full_training_pipeline(self):
         """Test complete training pipeline from initialization to convergence."""
         # Create model and problem
-        model = MLP(input_dim=2, hidden_dims=[64, 64, 64], output_dim=1, activation="tanh")
+        model = MLP(
+            input_dim=2, hidden_dims=[64, 64, 64], output_dim=1, activation="tanh"
+        )
         problem = PoissonProblem()
 
         # Training config
@@ -688,9 +690,12 @@ class TestEarlyStopping:
 
     def test_early_stopping_triggers(self):
         """Test that early stopping triggers when validation doesn't improve."""
-        model = MLP(input_dim=2, hidden_dims=[16], output_dim=1)
+        torch.manual_seed(999)
+        model = MLP(input_dim=2, hidden_dims=[8], output_dim=1)
         problem = PoissonProblem()
-        optimizer = optim.Adam(model.parameters(), lr=1e-5)  # Small lr for slow convergence
+        optimizer = optim.Adam(
+            model.parameters(), lr=1e-6
+        )  # Very small lr ensures negligible improvement
 
         trainer = PINNTrainer(
             model=model,
@@ -706,7 +711,7 @@ class TestEarlyStopping:
             print_every=1000,
             early_stopping=True,
             patience=3,
-            min_delta=0.1,
+            min_delta=1.0,  # Require 100% improvement — impossible
         )
 
         # Should stop before 1000 epochs

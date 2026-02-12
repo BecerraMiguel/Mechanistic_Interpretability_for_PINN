@@ -473,7 +473,9 @@ class TestPoissonComputeRelativeL2Error:
 
         model = PerfectModel(problem)
 
-        error = problem.compute_relative_l2_error(model, n_test_points=500, random_seed=42)
+        error = problem.compute_relative_l2_error(
+            model, n_test_points=500, random_seed=42
+        )
 
         # Error should be very close to 0
         assert error < 0.01  # Less than 0.01%
@@ -489,7 +491,9 @@ class TestPoissonComputeRelativeL2Error:
 
         model = BadModel()
 
-        error = problem.compute_relative_l2_error(model, n_test_points=500, random_seed=42)
+        error = problem.compute_relative_l2_error(
+            model, n_test_points=500, random_seed=42
+        )
 
         # Error should be significant (analytical solution is non-zero in interior)
         assert error > 10  # More than 10%
@@ -506,8 +510,12 @@ class TestPoissonComputeRelativeL2Error:
 
         model = DeterministicModel()
 
-        error1 = problem.compute_relative_l2_error(model, n_test_points=500, random_seed=42)
-        error2 = problem.compute_relative_l2_error(model, n_test_points=500, random_seed=42)
+        error1 = problem.compute_relative_l2_error(
+            model, n_test_points=500, random_seed=42
+        )
+        error2 = problem.compute_relative_l2_error(
+            model, n_test_points=500, random_seed=42
+        )
 
         # Should get same error with same seed
         assert abs(error1 - error2) < 1e-5

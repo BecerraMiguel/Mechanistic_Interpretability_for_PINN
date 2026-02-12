@@ -143,7 +143,9 @@ class PINNTrainer:
             Initial condition points (for time-dependent PDEs).
         """
         # Sample interior points
-        x_interior = self.problem.sample_interior_points(n=self.n_interior, random_seed=random_seed)
+        x_interior = self.problem.sample_interior_points(
+            n=self.n_interior, random_seed=random_seed
+        )
 
         # Sample boundary points
         x_boundary = self.problem.sample_boundary_points(
@@ -336,7 +338,9 @@ class PINNTrainer:
         print(f"Problem: {self.problem.__class__.__name__}")
         print(f"Interior points: {self.n_interior}")
         print(f"Boundary points: {self.n_boundary * 4} ({self.n_boundary} per edge)")
-        print(f"Loss weights: pde={self.loss_weights['pde']}, bc={self.loss_weights['bc']}")
+        print(
+            f"Loss weights: pde={self.loss_weights['pde']}, bc={self.loss_weights['bc']}"
+        )
         print(f"Optimizer: {self.optimizer.__class__.__name__}")
         print(f"Device: {self.device}")
         print("=" * 80)
@@ -376,7 +380,8 @@ class PINNTrainer:
                         self.patience_counter = 0
                         # Save best model state
                         self.best_model_state = {
-                            k: v.cpu().clone() for k, v in self.model.state_dict().items()
+                            k: v.cpu().clone()
+                            for k, v in self.model.state_dict().items()
                         }
                     else:
                         # No improvement
@@ -526,11 +531,17 @@ class PINNTrainer:
 
         # Check if problem is 2D
         if self.problem.spatial_dim != 2:
-            raise NotImplementedError("Visualization currently only supports 2D problems")
+            raise NotImplementedError(
+                "Visualization currently only supports 2D problems"
+            )
 
         # Create evaluation grid
-        x = torch.linspace(self.problem.domain[0][0], self.problem.domain[0][1], n_points)
-        y = torch.linspace(self.problem.domain[1][0], self.problem.domain[1][1], n_points)
+        x = torch.linspace(
+            self.problem.domain[0][0], self.problem.domain[0][1], n_points
+        )
+        y = torch.linspace(
+            self.problem.domain[1][0], self.problem.domain[1][1], n_points
+        )
         X, Y = torch.meshgrid(x, y, indexing="ij")
         grid_points = torch.stack([X.flatten(), Y.flatten()], dim=1).to(self.device)
 
@@ -540,7 +551,10 @@ class PINNTrainer:
 
         # Compute analytical solution
         u_exact = (
-            self.problem.analytical_solution(grid_points).cpu().numpy().reshape(n_points, n_points)
+            self.problem.analytical_solution(grid_points)
+            .cpu()
+            .numpy()
+            .reshape(n_points, n_points)
         )
 
         # Compute error

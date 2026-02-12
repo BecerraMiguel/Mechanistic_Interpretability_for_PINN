@@ -266,9 +266,7 @@ class LinearProbe:
         - R² < 0.0: Worse than predicting the mean
         """
         if not self.is_fitted:
-            raise RuntimeError(
-                "Probe must be fitted before scoring. Call fit() first."
-            )
+            raise RuntimeError("Probe must be fitted before scoring. Call fit() first.")
 
         # Get predictions
         predictions = self.predict(activations)

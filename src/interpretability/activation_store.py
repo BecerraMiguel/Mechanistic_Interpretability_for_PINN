@@ -135,12 +135,16 @@ class ActivationStore:
 
                 if (batch_idx + 1) % max(1, n_batches // 10) == 0:
                     progress = (batch_idx + 1) / n_batches * 100
-                    print(f"  Progress: {progress:.1f}% ({batch_idx + 1}/{n_batches} batches)")
+                    print(
+                        f"  Progress: {progress:.1f}% ({batch_idx + 1}/{n_batches} batches)"
+                    )
 
         # Concatenate all batches
         print("Concatenating batches...")
         for layer_name in all_activations:
-            all_activations[layer_name] = np.concatenate(all_activations[layer_name], axis=0)
+            all_activations[layer_name] = np.concatenate(
+                all_activations[layer_name], axis=0
+            )
 
         # Save to HDF5
         self._save_to_hdf5(grid_coords, all_activations)
@@ -175,7 +179,9 @@ class ActivationStore:
 
         return grid_coords
 
-    def _save_to_hdf5(self, coordinates: np.ndarray, activations: Dict[str, np.ndarray]) -> None:
+    def _save_to_hdf5(
+        self, coordinates: np.ndarray, activations: Dict[str, np.ndarray]
+    ) -> None:
         """
         Save coordinates and activations to HDF5 file.
 
@@ -357,7 +363,9 @@ class ActivationStore:
                 )
             self.grid_resolution = resolution
 
-        activation_grid = neuron_activations.reshape(self.grid_resolution, self.grid_resolution)
+        activation_grid = neuron_activations.reshape(
+            self.grid_resolution, self.grid_resolution
+        )
 
         # Extract x and y coordinates
         x = coordinates[:, 0].reshape(self.grid_resolution, self.grid_resolution)
@@ -459,7 +467,9 @@ class ActivationStore:
             ax = axes[row, col]
 
             # Get neuron activations
-            neuron_acts = activations[:, i].reshape(self.grid_resolution, self.grid_resolution)
+            neuron_acts = activations[:, i].reshape(
+                self.grid_resolution, self.grid_resolution
+            )
 
             # Plot
             im = ax.pcolormesh(x, y, neuron_acts, cmap=cmap, shading="auto")

@@ -42,7 +42,9 @@ class TestMLPInitialization:
     def test_custom_activation(self):
         """Test MLP with custom activation function."""
         for activation in ["tanh", "relu", "gelu", "sin"]:
-            model = MLP(input_dim=2, hidden_dims=[50], output_dim=1, activation=activation)
+            model = MLP(
+                input_dim=2, hidden_dims=[50], output_dim=1, activation=activation
+            )
             assert model.activation_name == activation
 
     def test_invalid_activation(self):
@@ -242,7 +244,11 @@ class TestMLPGradients:
         # Compute du/dx
         grad_outputs = torch.ones_like(u)
         du_dx = torch.autograd.grad(
-            outputs=u, inputs=x, grad_outputs=grad_outputs, create_graph=True, retain_graph=True
+            outputs=u,
+            inputs=x,
+            grad_outputs=grad_outputs,
+            create_graph=True,
+            retain_graph=True,
         )[0]
 
         assert du_dx.shape == (100, 2)

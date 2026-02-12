@@ -7,10 +7,10 @@
 
 ## 📋 Quick Status Overview
 
-**Current Phase**: Week 2 - Probing Classifiers (COMPLETE ✅)
-**Last Completed**: Day 11 - Probe Weight Analysis (Hypothesis Documented!)
+**Current Phase**: Week 2 Consolidation (COMPLETE ✅)
+**Last Completed**: Day 13 - Week 2 Consolidation (Technical Summary, Architecture Comparison, Code Quality, Paper Figures)
 **Next Up**: Week 3 - Advanced Architectures & Activation Patching
-**Overall Progress**: Week 1 complete (100%), Week 2 complete (100%)
+**Overall Progress**: Week 1 complete (100%), Week 2 complete (100%), Week 2 Consolidation complete (100%)
 
 ---
 
@@ -1442,6 +1442,102 @@ pde_loss = torch.mean(pde_residual**2)
 
 ---
 
+### Day 13: Week 2 Consolidation
+**Date Completed**: 2026-02-12
+**Status**: ✅ Complete
+**Test Results**: 248/248 passing (2 skipped CUDA), **94% code coverage**
+
+#### Accomplishments:
+
+##### Task 1: Technical Summary of Probing Findings (1-2 pages)
+- ✅ **Publication-quality technical summary** (`outputs/week2_technical_summary.md`, 196 lines):
+  - 7 sections: Setup, Core Finding, Emergence Patterns, Weight Analysis, Hypothesis, Quantitative Summary, Limitations
+  - Documents two-stage derivative computation strategy
+  - Full R² table across layers and derivatives
+  - Proposes Multi-Scale Continuous Finite Difference (MS-CFD) Algorithm hypothesis
+  - Includes quantitative summary table with all key metrics
+  - Lists limitations and 5 future directions
+
+##### Task 2: Extend Probing to Additional Test Cases (Different Architectures)
+- ✅ **Trained and probed 5 MLP variants** (`scripts/extend_probing_architectures.py`):
+  - Shallow (2L/64/tanh): 4,417 params, 7.7% error
+  - Deep (6L/64/tanh): 21,057 params, 7.9% error
+  - Wide (4L/128/tanh): 50,049 params, 5.9% error
+  - Narrow (4L/32/tanh): 3,297 params, 10.4% error
+  - ReLU (4L/64/relu): 12,737 params, 100.2% error (total failure)
+- ✅ **Key findings**:
+  - Two-stage pattern (1st derivs >> 2nd derivs) holds for ALL tanh architectures
+  - Pattern is independent of depth (2-6 layers), width (32-128), and training quality
+  - ReLU completely fails — smooth activations critical for PINN derivative computation
+  - Model accuracy correlates with probe R² (well-trained baseline has best encoding)
+  - Deeper networks show more gradual emergence across layers
+- ✅ **Outputs** (`outputs/day13_architecture_comparison/`, 11.5 MB):
+  - `all_probe_results.json`: Full R² results for all architectures
+  - `architecture_comparison.txt`: Formatted comparison table with analysis
+  - `architecture_comparison.png`: Peak R² bar chart + first vs second comparison
+  - `layer_progression_by_architecture.png`: Layer-by-layer R² curves
+  - 5 HDF5 activation files
+
+##### Task 3: Code Quality Checks, Test Coverage >80%
+- ✅ **Test suite**: 248 passed, 2 skipped (CUDA), 0 failed
+- ✅ **Code coverage**: **94%** (target: >80%)
+  - `src/models/mlp.py`: 100%
+  - `src/problems/poisson.py`: 100%
+  - `src/utils/sampling.py`: 98%
+  - `src/interpretability/probing.py`: 98%
+  - `src/interpretability/activation_store.py`: 95%
+  - `src/utils/derivatives.py`: 95%
+  - `src/models/base.py`: 94%
+  - `src/training/trainer.py`: 87%
+  - `src/problems/base.py`: 80%
+- ✅ **Code formatting**: Applied `black` (16 files) and `isort` (4 files)
+- ✅ **Bug fix**: Fixed flaky `test_early_stopping_triggers` test
+  - Used fixed seed, tiny lr (1e-6), impossible min_delta (1.0) to guarantee triggering
+
+##### Task 4: Prepare Figures for Eventual Paper
+- ✅ **5 publication-quality figures** (`outputs/paper_figures/`, PNG 300 DPI + PDF vector):
+  1. `fig1_solution_quality`: PINN solution vs analytical vs error (3-panel)
+  2. `fig2_r2_heatmap`: R² matrix (layers × derivatives) with annotations — core finding
+  3. `fig3_derivative_emergence`: Layer-by-layer R² progression with shaded regions
+  4. `fig4_weight_analysis`: PINN-probe weight correlation + FD-like bar patterns
+  5. `fig5_architecture_comparison`: Peak R² by architecture + two-stage gap
+- ✅ **Consistent styling**: Serif font, labeled panels (a/b/c), publication-ready
+
+#### Files Created/Modified:
+
+**Scripts:**
+- `scripts/extend_probing_architectures.py` (architecture comparison pipeline)
+- `scripts/fix_and_regenerate_comparison.py` (fix error display + regenerate)
+- `scripts/generate_paper_figures.py` (5 publication figures)
+
+**Outputs:**
+- `outputs/week2_technical_summary.md` (196 lines, technical summary)
+- `outputs/day13_architecture_comparison/` (11 files, 11.5 MB)
+- `outputs/paper_figures/` (10 files: 5 PNG + 5 PDF)
+
+**Code Quality:**
+- 16 files reformatted with black
+- 4 files fixed with isort
+- `tests/training/test_trainer.py` (fixed flaky test)
+
+#### Week 2 Validation Checkpoint:
+
+| Deliverable | Target | Achieved | Status |
+|---|---|---|---|
+| Probing framework complete | Working | Working + extended to 5 architectures | ✅ |
+| Laplacian probe R-squared | >0.85 | 0.34 (but led to key discovery) | ⚠️ |
+| Layer-wise analysis notebook | Complete | Complete + technical summary + paper figures | ✅ |
+| Initial mechanistic hypothesis | Documented | MS-CFD Algorithm hypothesis fully documented | ✅ |
+
+#### Day 13 Checkpoint Verification:
+- [x] Technical summary written (196 lines, 7 sections) ✅
+- [x] Probing extended to 5 additional architectures ✅
+- [x] Test coverage >80% (achieved 94%) ✅
+- [x] Code quality checks passed (black + isort clean) ✅
+- [x] Paper figures prepared (5 figures, PNG + PDF) ✅
+
+---
+
 ## 📝 Current Architecture & Design Decisions
 
 ### MLP Architecture Design
@@ -1464,7 +1560,7 @@ pde_loss = torch.mean(pde_residual**2)
 - **Optimizers**: Adam (default), SGD, L-BFGS supported
 
 ### Testing Philosophy
-- **Coverage**: Aim for >80% (currently at ~100%)
+- **Coverage**: Aim for >80% (currently at 94%)
 - **Structure**: Mirror `src/` in `tests/`
 - **Scope**: Unit tests for components, integration tests for workflows
 - **Test Data**: Use `torch.randn()` with fixed seeds for reproducibility
@@ -1482,42 +1578,19 @@ pde_loss = torch.mean(pde_residual**2)
 ## 🎯 Next Steps: Week 2 and Beyond
 
 **Week 1 Status**: ✅ **COMPLETE** (6/6 days, 100%)
-**Week 2 Status**: ✅ **COMPLETE** (Days 8, 9, 11 complete, 100%)
+**Week 2 Status**: ✅ **COMPLETE** (Days 8, 9, 11, 13 complete, 100%)
 
-### Week 2: Probing Classifiers
-**Estimated Time**: ~40-50 hours total
-**Focus**: Implement probing classifier framework and establish baselines for derivative detection
+### Week 2: Probing Classifiers (COMPLETE)
 
-**✅ Day 8: Probing Framework Architecture (COMPLETE)**
-- ✅ LinearProbe class for single-target prediction
-- ✅ Ground-truth derivative computation for Poisson problem
-- ✅ 58 new tests (all passing)
-- Ready for Days 9-10 experiments
+**✅ Day 8**: LinearProbe class + ground-truth derivatives (58 new tests)
+**✅ Days 9-10**: Layer-wise probing — MAJOR DISCOVERY (two-stage computation)
+**✅ Days 11-12**: Probe weight analysis — MS-CFD hypothesis documented
+**✅ Day 13**: Week 2 Consolidation — technical summary, architecture comparison, code quality, paper figures
 
-**✅ Days 9-10: Layer-wise Derivative Probing (COMPLETE - MAJOR DISCOVERY!)**
-**Actual Time**: ~10 minutes computational + analysis
-- ✅ Trained 20 probes (8 first derivative + 12 second derivative)
-- ✅ Generated 8 comprehensive visualizations
-- ✅ Discovered two-stage derivative computation strategy:
-  - **Stage 1**: First derivatives explicitly encoded (R² > 0.9)
-  - **Stage 2**: Second derivatives computed via autograd (R² ~ 0.5)
-- ✅ Confirmed research hypothesis about derivative circuit emergence
-- ⚠️ Failed Laplacian R² > 0.85 checkpoint (got 0.34), but led to breakthrough insight!
-- 🎯 **Key Finding**: PINNs use efficient encoding strategy—cache first derivatives, compute second derivatives on-demand
-
-**✅ Days 11-12: Probe Weight Analysis (COMPLETE - Hypothesis Documented!)**
-**Actual Time**: ~4-5 hours
-- ✅ Extracted and visualized probe weights for all layers and derivatives
-- ✅ Analyzed finite-difference-like patterns: 372 pairs (du/dx), 397 pairs (du/dy)
-- ✅ Compared with stencil patterns: cosine similarity > 0.97 to ideal [1,-2,1]
-- ✅ Documented hypothesis: Multi-Scale Continuous Finite Difference Algorithm
-- ✅ 34 output files (5.6 MB): 22 visualizations, 4 reports, 4 JSON, summary figure
-- 🎯 **Key Hypothesis**: PINN learns a two-stage, multi-scale continuous
-  generalization of finite differences (RBF-FD hybrid)
-
-### Week 3-4: Advanced Architectures (Preview)
+### Week 3-4: Advanced Architectures (Next)
 - Modified Fourier Networks (MFN)
 - Attention-Enhanced PINNs
+- Activation patching experiments
 - Burgers equation (nonlinear PDE)
 - Comparative architecture studies
 

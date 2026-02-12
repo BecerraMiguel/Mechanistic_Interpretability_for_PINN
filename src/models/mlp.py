@@ -37,7 +37,11 @@ class MLP(BasePINN):
     """
 
     def __init__(
-        self, input_dim: int, hidden_dims: List[int], output_dim: int = 1, activation: str = "tanh"
+        self,
+        input_dim: int,
+        hidden_dims: List[int],
+        output_dim: int = 1,
+        activation: str = "tanh",
     ):
         """
         Initialize the MLP PINN.
@@ -210,7 +214,9 @@ class MLP(BasePINN):
             >>> residual = model.compute_pde_residual(x, pde_fn=poisson_pde)
         """
         if not x.requires_grad:
-            raise ValueError("Input x must have requires_grad=True for PDE residual computation")
+            raise ValueError(
+                "Input x must have requires_grad=True for PDE residual computation"
+            )
 
         # Compute network output
         u = self.forward(x)

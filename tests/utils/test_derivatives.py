@@ -273,7 +273,10 @@ class TestDerivativesIntegration:
 
         # Expected Laplacian
         expected_laplacian = (
-            -2 * (math.pi**2) * torch.sin(math.pi * x[:, 0:1]) * torch.sin(math.pi * x[:, 1:2])
+            -2
+            * (math.pi**2)
+            * torch.sin(math.pi * x[:, 0:1])
+            * torch.sin(math.pi * x[:, 1:2])
         )
 
         assert torch.allclose(laplacian, expected_laplacian, rtol=1e-3)

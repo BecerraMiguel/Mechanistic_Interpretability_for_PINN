@@ -17,7 +17,9 @@ class SimplePINN(BasePINN):
     def __init__(self, input_dim: int, output_dim: int, hidden_dim: int = 10):
         super().__init__(input_dim, output_dim)
         self.net = nn.Sequential(
-            nn.Linear(input_dim, hidden_dim), nn.Tanh(), nn.Linear(hidden_dim, output_dim)
+            nn.Linear(input_dim, hidden_dim),
+            nn.Tanh(),
+            nn.Linear(hidden_dim, output_dim),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -113,7 +115,9 @@ class TestBasePINN:
         losses = model.train_step(x_interior, x_boundary, u_boundary, weights=weights)
 
         # Total loss should reflect custom weighting
-        expected_total = weights["pde"] * losses["loss_pde"] + weights["bc"] * losses["loss_bc"]
+        expected_total = (
+            weights["pde"] * losses["loss_pde"] + weights["bc"] * losses["loss_bc"]
+        )
         assert torch.allclose(losses["loss_total"], expected_total)
 
     def test_get_parameters_count(self):

@@ -41,7 +41,9 @@ class TestGridGeneration:
     def test_generate_grid_2d(self):
         """Test 2D grid generation."""
         store = ActivationStore("dummy.h5")
-        grid = store._generate_grid(resolution=10, domain_bounds=((0.0, 1.0), (0.0, 1.0)))
+        grid = store._generate_grid(
+            resolution=10, domain_bounds=((0.0, 1.0), (0.0, 1.0))
+        )
 
         # Check shape
         assert grid.shape == (100, 2)
@@ -88,7 +90,10 @@ class TestActivationExtraction:
 
         # Extract activations on small grid
         store.extract_on_grid(
-            simple_model, grid_resolution=10, domain_bounds=((0.0, 1.0), (0.0, 1.0)), batch_size=50
+            simple_model,
+            grid_resolution=10,
+            domain_bounds=((0.0, 1.0), (0.0, 1.0)),
+            batch_size=50,
         )
 
         # Check file was created
@@ -259,7 +264,9 @@ class TestVisualization:
     def test_visualize_neuron_save(self, populated_store, tmp_path):
         """Test saving neuron visualization."""
         save_path = tmp_path / "neuron_viz.png"
-        fig = populated_store.visualize_neuron("layer_0", neuron_idx=0, save_path=str(save_path))
+        fig = populated_store.visualize_neuron(
+            "layer_0", neuron_idx=0, save_path=str(save_path)
+        )
 
         assert save_path.exists()
 
@@ -299,7 +306,9 @@ class TestConvenienceFunction:
         model.eval()
 
         save_path = tmp_path / "test.h5"
-        store = extract_activations_from_model(model, str(save_path), grid_resolution=10)
+        store = extract_activations_from_model(
+            model, str(save_path), grid_resolution=10
+        )
 
         # Check store is returned
         assert isinstance(store, ActivationStore)
@@ -405,7 +414,9 @@ class TestEdgeCases:
 
         save_path = tmp_path / "custom_domain.h5"
         store = ActivationStore(str(save_path))
-        store.extract_on_grid(model, grid_resolution=10, domain_bounds=((-1.0, 1.0), (0.0, 2.0)))
+        store.extract_on_grid(
+            model, grid_resolution=10, domain_bounds=((-1.0, 1.0), (0.0, 2.0))
+        )
 
         coords = store.load_coordinates()
         assert coords[:, 0].min() >= -1.0

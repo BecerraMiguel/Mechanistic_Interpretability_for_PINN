@@ -47,7 +47,9 @@ class PoissonProblem(BaseProblem):
         Domain boundaries. Default: ((0, 1), (0, 1)) for unit square.
     """
 
-    def __init__(self, domain: Tuple[Tuple[float, float], ...] = ((0.0, 1.0), (0.0, 1.0))):
+    def __init__(
+        self, domain: Tuple[Tuple[float, float], ...] = ((0.0, 1.0), (0.0, 1.0))
+    ):
         """
         Initialize the Poisson problem.
 
@@ -60,7 +62,9 @@ class PoissonProblem(BaseProblem):
 
         # Verify 2D domain
         if self.spatial_dim != 2:
-            raise ValueError(f"PoissonProblem only supports 2D domains, got {self.spatial_dim}D")
+            raise ValueError(
+                f"PoissonProblem only supports 2D domains, got {self.spatial_dim}D"
+            )
 
         # Store domain bounds for convenience
         self.x_min, self.x_max = domain[0]
@@ -110,7 +114,12 @@ class PoissonProblem(BaseProblem):
         y_coord = x[:, 1:2]  # (N, 1)
 
         # f = -2π² sin(πx)sin(πy)
-        f = -2 * (math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(math.pi * y_coord)
+        f = (
+            -2
+            * (math.pi**2)
+            * torch.sin(math.pi * x_coord)
+            * torch.sin(math.pi * y_coord)
+        )
         return f
 
     def boundary_condition(self, x: torch.Tensor) -> torch.Tensor:
@@ -173,7 +182,9 @@ class PoissonProblem(BaseProblem):
 
         return torch.tensor(points, dtype=torch.float32)
 
-    def sample_boundary_points(self, n_per_edge: int, random_seed: int = None) -> torch.Tensor:
+    def sample_boundary_points(
+        self, n_per_edge: int, random_seed: int = None
+    ) -> torch.Tensor:
         """
         Sample points uniformly on the domain boundary.
 
@@ -199,7 +210,9 @@ class PoissonProblem(BaseProblem):
             Boundary point coordinates of shape (4 * n_per_edge, 2).
         """
         if n_per_edge <= 0:
-            raise ValueError(f"Number of points per edge must be positive, got {n_per_edge}")
+            raise ValueError(
+                f"Number of points per edge must be positive, got {n_per_edge}"
+            )
 
         # Set random seed if provided (for consistency with interior sampling)
         if random_seed is not None:
@@ -229,12 +242,18 @@ class PoissonProblem(BaseProblem):
         boundary_points.append(left)
 
         # Concatenate all boundary points
-        all_boundary_points = torch.cat(boundary_points, dim=0)  # Shape: (4 * n_per_edge, 2)
+        all_boundary_points = torch.cat(
+            boundary_points, dim=0
+        )  # Shape: (4 * n_per_edge, 2)
 
         return all_boundary_points
 
     def pde_residual(
-        self, u: torch.Tensor, x: torch.Tensor, du_dx: torch.Tensor, d2u_dx2: torch.Tensor
+        self,
+        u: torch.Tensor,
+        x: torch.Tensor,
+        du_dx: torch.Tensor,
+        d2u_dx2: torch.Tensor,
     ) -> torch.Tensor:
         """
         Compute PDE residual: ∇²u - f(x).
@@ -364,8 +383,8 @@ class PoissonProblem(BaseProblem):
         y_coord = x[:, 1:2]  # (N, 1)
 
         # ∂²u/∂x² = ∂/∂x[π·cos(πx)·sin(πy)] = -π²·sin(πx)·sin(πy)
-        d2u_dx2 = -(math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(
-            math.pi * y_coord
+        d2u_dx2 = (
+            -(math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(math.pi * y_coord)
         )
         return d2u_dx2
 
@@ -399,8 +418,8 @@ class PoissonProblem(BaseProblem):
         y_coord = x[:, 1:2]  # (N, 1)
 
         # ∂²u/∂y² = ∂/∂y[π·sin(πx)·cos(πy)] = -π²·sin(πx)·sin(πy)
-        d2u_dy2 = -(math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(
-            math.pi * y_coord
+        d2u_dy2 = (
+            -(math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(math.pi * y_coord)
         )
         return d2u_dy2
 
@@ -442,8 +461,11 @@ class PoissonProblem(BaseProblem):
         y_coord = x[:, 1:2]  # (N, 1)
 
         # ∇²u = -2π²·sin(πx)·sin(πy)
-        laplacian = -2.0 * (math.pi**2) * torch.sin(math.pi * x_coord) * torch.sin(
-            math.pi * y_coord
+        laplacian = (
+            -2.0
+            * (math.pi**2)
+            * torch.sin(math.pi * x_coord)
+            * torch.sin(math.pi * y_coord)
         )
         return laplacian
 

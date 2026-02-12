@@ -1,0 +1,35 @@
+===============================================================================================
+ARCHITECTURE COMPARISON: Peak R-squared for Each Derivative
+===============================================================================================
+
+Architecture            Params    du/dx    du/dy  d2u/dx2  d2u/dy2      Lap  L2 Err%
+-----------------------------------------------------------------------------------------------
+baseline_4L64_tanh      12,737   0.9124   0.8926   0.4636   0.5012   0.3424     1.0%
+shallow_2L               4,417   0.8496   0.8299   0.3113   0.2824   0.2286     7.7%
+deep_6L                 21,057   0.8250   0.8707   0.4355   0.3796   0.2281     7.9%
+wide_128                50,049   0.8945   0.8825   0.3972   0.3924   0.3330     5.9%
+narrow_32                3,297   0.8495   0.8098   0.3808   0.2900   0.0713    10.4%
+relu_4L                 12,737   0.4610   0.4281  -0.5388  -0.5267  -0.9032   100.2%
+-----------------------------------------------------------------------------------------------
+
+KEY OBSERVATIONS:
+
+  baseline_4L64_tanh    : avg 1st=0.825, avg 2nd=0.152, gap=0.673  -> Two-stage pattern: YES
+  shallow_2L            : avg 1st=0.800, avg 2nd=0.118, gap=0.682  -> Two-stage pattern: YES
+  deep_6L               : avg 1st=0.772, avg 2nd=0.026, gap=0.747  -> Two-stage pattern: YES
+  wide_128              : avg 1st=0.803, avg 2nd=0.082, gap=0.720  -> Two-stage pattern: YES
+  narrow_32             : avg 1st=0.757, avg 2nd=-0.040, gap=0.797  -> Two-stage pattern: YES
+  relu_4L               : avg 1st=0.254, avg 2nd=-0.885, gap=1.139  -> Two-stage pattern: YES
+
+INTERPRETATION:
+
+  1. The two-stage pattern (1st derivs >> 2nd derivs) holds for ALL tanh architectures,
+     regardless of depth (2-6 layers), width (32-128 neurons), or training quality.
+  2. ReLU completely fails to learn the Poisson problem (100% error), confirming
+     that smooth activations (tanh) are critical for PINN derivative computation.
+  3. The baseline (well-trained, 4L/64/tanh) achieves the best probe R-squared,
+     suggesting model accuracy improves derivative encoding quality.
+  4. Wider networks (128 neurons) achieve similar peak R-squared to baseline
+     despite less training, suggesting width helps derivative encoding.
+  5. Deeper networks (6L) show more gradual emergence but similar peak values,
+     confirming that the derivative computation distributes across available layers.

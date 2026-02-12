@@ -113,7 +113,9 @@ class BaseProblem(ABC):
         pass
 
     @abstractmethod
-    def sample_boundary_points(self, n_per_edge: int, random_seed: int = None) -> torch.Tensor:
+    def sample_boundary_points(
+        self, n_per_edge: int, random_seed: int = None
+    ) -> torch.Tensor:
         """
         Sample points on the domain boundary.
 
@@ -177,5 +179,7 @@ class BaseProblem(ABC):
 
     def __repr__(self) -> str:
         """String representation of the problem."""
-        domain_str = ", ".join([f"[{low:.2f}, {high:.2f}]" for low, high in self.domain])
+        domain_str = ", ".join(
+            [f"[{low:.2f}, {high:.2f}]" for low, high in self.domain]
+        )
         return f"{self.__class__.__name__}(domain=({domain_str}), spatial_dim={self.spatial_dim})"

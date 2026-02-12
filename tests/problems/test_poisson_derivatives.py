@@ -224,7 +224,9 @@ class TestPoissonAnalyticalLaplacian:
 
         sum_of_second_derivs = d2u_dx2 + d2u_dy2
 
-        torch.testing.assert_close(laplacian, sum_of_second_derivs, atol=1e-6, rtol=1e-6)
+        torch.testing.assert_close(
+            laplacian, sum_of_second_derivs, atol=1e-6, rtol=1e-6
+        )
 
     def test_laplacian_equals_source_term(self):
         """Test that ∇²u = source_term(x) for Poisson equation."""

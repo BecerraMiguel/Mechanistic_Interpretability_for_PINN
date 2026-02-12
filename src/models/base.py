@@ -132,7 +132,11 @@ class BasePINN(nn.Module, ABC):
             loss_ic = torch.mean((u_pred_ic - u_initial) ** 2)
 
         # Total weighted loss
-        loss_total = weights["pde"] * loss_pde + weights["bc"] * loss_bc + weights["ic"] * loss_ic
+        loss_total = (
+            weights["pde"] * loss_pde
+            + weights["bc"] * loss_bc
+            + weights["ic"] * loss_ic
+        )
 
         return {
             "loss_total": loss_total,
