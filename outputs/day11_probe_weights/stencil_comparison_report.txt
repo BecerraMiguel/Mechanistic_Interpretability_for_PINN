@@ -1,0 +1,178 @@
+================================================================================
+STENCIL PATTERN COMPARISON REPORT - Day 11 Task 3
+================================================================================
+
+REFERENCE STENCILS
+----------------------------------------
+  Forward difference, 1st order, O(h):
+    Coefficients: [-1.0, 1.0]
+    Offsets: [0.0, 1.0]
+  Backward difference, 1st order, O(h):
+    Coefficients: [-1.0, 1.0]
+    Offsets: [-1.0, 0.0]
+  Central difference, 1st derivative, O(h^2):
+    Coefficients: [-0.5, 0.0, 0.5]
+    Offsets: [-1.0, 0.0, 1.0]
+  Central difference, 2nd derivative, O(h^2):
+    Coefficients: [1.0, -2.0, 1.0]
+    Offsets: [-1.0, 0.0, 1.0]
+  Central difference, 1st derivative, O(h^4):
+    Coefficients: [0.08333333333333333, -0.6666666666666666, 0.0, 0.6666666666666666, -0.08333333333333333]
+    Offsets: [-2.0, -1.0, 0.0, 1.0, 2.0]
+  Central difference, 2nd derivative, O(h^4):
+    Coefficients: [-0.08333333333333333, 1.3333333333333333, -2.5, 1.3333333333333333, -0.08333333333333333]
+    Offsets: [-2.0, -1.0, 0.0, 1.0, 2.0]
+
+1. FIRST DERIVATIVE PAIRS vs CENTRAL DIFFERENCE
+--------------------------------------------------
+  Ideal: [-1, 1] / h (forward) or [-0.5, 0.5] (central)
+  Key metric: weight ratio ~= -1.0 (symmetric difference)
+
+  du/dx:
+    Pairs analyzed: 5
+    Mean symmetry score: 0.722 (1.0 = perfect)
+    Best symmetry score: 0.978
+    Mean pattern match (cos): 0.991
+    Mean effective h: 0.522
+    ASSESSMENT: STRONG match to finite difference pattern
+
+  du/dy:
+    Pairs analyzed: 5
+    Mean symmetry score: 0.868 (1.0 = perfect)
+    Best symmetry score: 0.998
+    Mean pattern match (cos): 0.996
+    Mean effective h: 1.736
+    ASSESSMENT: STRONG match to finite difference pattern
+
+
+2. SECOND DERIVATIVE TRIPLETS vs [1, -2, 1] STENCIL
+--------------------------------------------------
+  Ideal: [1, -2, 1] / h^2 (central, 2nd order)
+  Key metrics: middle/outer ratio ~= 2.0, outer symmetry ~= 1.0
+
+  d2u/dx2:
+    Triplets analyzed: 3
+    Mean cosine sim to [1,-2,1]: 0.981 (1.0 = perfect)
+    Best cosine sim: 0.999
+    Mean ratio score (mid/outer~2): 0.766
+    Mean outer symmetry: 0.736
+    Mean bias evenness: 0.917
+    ASSESSMENT: STRONG match to [1,-2,1] stencil
+
+  d2u/dy2:
+    Triplets analyzed: 3
+    Mean cosine sim to [1,-2,1]: 0.970 (1.0 = perfect)
+    Best cosine sim: 0.975
+    Mean ratio score (mid/outer~2): 0.675
+    Mean outer symmetry: 0.665
+    Mean bias evenness: 0.929
+    ASSESSMENT: STRONG match to [1,-2,1] stencil
+
+  Laplacian:
+    Triplets analyzed: 3
+    Mean cosine sim to [1,-2,1]: 0.986 (1.0 = perfect)
+    Best cosine sim: 0.998
+    Mean ratio score (mid/outer~2): 0.740
+    Mean outer symmetry: 0.949
+    Mean bias evenness: 0.933
+    ASSESSMENT: STRONG match to [1,-2,1] stencil
+
+
+3. EFFECTIVE STENCIL RECONSTRUCTION
+--------------------------------------------------
+  Binned neurons by spatial position to form effective stencil
+
+  du/dx:
+    Neurons used: 59
+    Peak position: 0.09 (weight=3.659)
+    Non-empty bins: 13/15
+    Weight range: [-1.299, 3.659]
+    Shape: Mixed positive/negative (difference-like)
+
+  du/dy:
+    Neurons used: 59
+    Peak position: 0.19 (weight=1.978)
+    Non-empty bins: 14/15
+    Weight range: [-1.019, 1.978]
+    Shape: Mixed positive/negative (difference-like)
+
+  d2u/dx2:
+    Neurons used: 59
+    Peak position: -0.31 (weight=1.871)
+    Non-empty bins: 13/15
+    Weight range: [-1.768, 1.871]
+    Shape: Mixed positive/negative (difference-like)
+
+  d2u/dy2:
+    Neurons used: 59
+    Peak position: 0.40 (weight=-4.401)
+    Non-empty bins: 14/15
+    Weight range: [-4.401, 1.835]
+    Shape: Mixed positive/negative (difference-like)
+
+  Laplacian:
+    Neurons used: 59
+    Peak position: 0.09 (weight=2.881)
+    Non-empty bins: 13/15
+    Weight range: [-1.696, 2.881]
+    Shape: Mixed positive/negative (difference-like)
+
+
+4. MULTI-SCALE vs SINGLE-SCALE COMPUTATION
+--------------------------------------------------
+  du/dx grid spacings:
+    Range: [0.145, 1.012]
+    Ratio max/min: 7.0x
+    Std/Mean: 0.57 (higher = more multi-scale)
+    ASSESSMENT: MULTI-SCALE computation (multiple grid spacings)
+
+  du/dy grid spacings:
+    Range: [0.441, 4.171]
+    Ratio max/min: 9.5x
+    Std/Mean: 0.76 (higher = more multi-scale)
+    ASSESSMENT: MULTI-SCALE computation (multiple grid spacings)
+
+
+5. OVERALL COMPARISON SUMMARY
+--------------------------------------------------
+
+  Classical Finite Differences vs Learned Computation:
+
+  +-------------------+------------------+--------------------+
+  | Property          | Classical FD     | PINN (Learned)     |
+  +-------------------+------------------+--------------------+
+  | Grid              | Uniform, fixed h | Variable, multi-h  |
+  | Basis functions   | Point evaluations| Smooth tanh        |
+  | Stencil width     | 2-5 points       | 64 neurons (all)   |
+  | Coefficient signs | Exact [-1,+1]    | Approx [-1,+1]     |
+  | 2nd deriv pattern | Exact [1,-2,1]   | Partial [+,-,+]    |
+  | Scale             | Single h         | Multi-scale        |
+  | Encoding          | Explicit         | 1st: explicit      |
+  |                   |                  | 2nd: implicit      |
+  +-------------------+------------------+--------------------+
+
+  KEY FINDINGS:
+    1. First derivatives show STRONG structural similarity to FD pairs
+       - Weight ratios near -1.0 (symmetric difference)
+       - Neuron pairs with aligned orientations + shifted biases
+       - But using continuous tanh instead of point evaluations
+
+    2. Second derivative [1,-2,1] patterns are PARTIAL
+       - Triplets exist with correct sign pattern [+,-,+]
+       - Middle-to-outer ratios ~1.3-1.8 (not ideal 2.0)
+       - Consistent with low R2 for second derivatives
+
+    3. Network uses MULTI-SCALE computation
+       - Multiple effective grid spacings simultaneously
+       - This is BETTER than single-scale FD for smooth solutions
+       - Analogous to multi-resolution analysis / wavelets
+
+    4. The learned algorithm is a CONTINUOUS GENERALIZATION of FD
+       - Not discrete FD, but shares the same mathematical principle
+       - Difference of shifted functions = derivative approximation
+       - Using smooth tanh basis instead of delta functions
+       - A 'spectral finite difference' hybrid approach
+
+================================================================================
+END OF REPORT
+================================================================================

@@ -1,0 +1,40 @@
+{
+  "du_dx": {
+    "n_pairs": 5,
+    "mean_symmetry": 0.7220175743103028,
+    "mean_cos_forward": 0.991154579998853,
+    "mean_h": 0.5220687806606292,
+    "best_symmetry": 0.9784724712371826
+  },
+  "du_dy": {
+    "n_pairs": 5,
+    "mean_symmetry": 0.8677138209342956,
+    "mean_cos_forward": 0.9957120085643041,
+    "mean_h": 1.7361526906490325,
+    "best_symmetry": 0.9980173110961914
+  },
+  "d2u_dx2": {
+    "n_triplets": 3,
+    "mean_cos_sim": 0.9805924654237622,
+    "mean_ratio_score": 0.7660420139630636,
+    "mean_outer_sym": 0.736096889618841,
+    "mean_evenness": 0.9166015187899271,
+    "best_cos_sim": 0.9988595985922347
+  },
+  "d2u_dy2": {
+    "n_triplets": 3,
+    "mean_cos_sim": 0.9703279110361641,
+    "mean_ratio_score": 0.6751899123191833,
+    "mean_outer_sym": 0.6647276815915998,
+    "mean_evenness": 0.9287516474723816,
+    "best_cos_sim": 0.9750403708529063
+  },
+  "laplacian": {
+    "n_triplets": 3,
+    "mean_cos_sim": 0.9863453202534481,
+    "mean_ratio_score": 0.7395411332448324,
+    "mean_outer_sym": 0.949155522215266,
+    "mean_evenness": 0.9329318801561991,
+    "best_cos_sim": 0.9978479671046694
+  }
+}

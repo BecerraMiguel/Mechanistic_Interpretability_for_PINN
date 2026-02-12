@@ -1,0 +1,119 @@
+================================================================================
+FINITE-DIFFERENCE PATTERN ANALYSIS REPORT - Day 11 Task 2
+================================================================================
+
+BACKGROUND
+----------------------------------------
+A finite difference approximation computes derivatives by combining
+function values at nearby points:
+  First derivative:  du/dx ≈ [u(x+h) - u(x-h)] / (2h)
+  Second derivative: d2u/dx2 ≈ [u(x-h) - 2u(x) + u(x+h)] / h2
+
+In our PINN, layer_0 neurons compute h_i = tanh(w_i . x + b_i).
+If two neurons have similar input weights but different biases,
+they evaluate the same function at different spatial locations.
+Probe weights that combine them with opposite signs create a
+difference operation analogous to finite differences.
+
+1. NEURON PAIR ANALYSIS (First Derivatives)
+--------------------------------------------------
+
+  du/dx at layer_0:
+    Total candidate pairs found: 372
+    Top 5 pairs by difference strength:
+      #1: n5-n15 | cosim=0.996 | pw=[+1.110, -0.954] | ratio=-1.16 | h_eff=0.343
+      #2: n5-n54 | cosim=-0.981 | pw=[+1.110, -0.821] | ratio=-1.35 | h_eff=1.012
+      #3: n5-n34 | cosim=-0.984 | pw=[+1.110, -0.805] | ratio=-1.38 | h_eff=0.685
+      #4: n15-n16 | cosim=0.994 | pw=[-0.954, +0.934] | ratio=-1.02 | h_eff=0.145
+      #5: n5-n29 | cosim=0.937 | pw=[+1.110, -0.753] | ratio=-1.47 | h_eff=0.425
+
+    Statistics (top 20 pairs):
+      Mean |weight ratio|: 1.306 (ideal=-1.0 for symmetric)
+      Mean effective h: 0.570
+      Median effective h: 0.470
+      Near-symmetric pairs (0.5 < |ratio| < 2.0): 19/20
+
+  du/dy at layer_0:
+    Total candidate pairs found: 397
+    Top 5 pairs by difference strength:
+      #1: n27-n53 | cosim=-0.903 | pw=[+0.820, -0.953] | ratio=-0.86 | h_eff=4.171
+      #2: n37-n53 | cosim=0.937 | pw=[+0.808, -0.953] | ratio=-0.85 | h_eff=1.925
+      #3: n26-n53 | cosim=-0.925 | pw=[+0.673, -0.953] | ratio=-0.71 | h_eff=0.441
+      #4: n0-n13 | cosim=0.999 | pw=[-0.778, +0.840] | ratio=-0.93 | h_eff=0.789
+      #5: n16-n38 | cosim=-0.878 | pw=[+0.806, -0.804] | ratio=-1.00 | h_eff=1.355
+
+    Statistics (top 20 pairs):
+      Mean |weight ratio|: 0.953 (ideal=-1.0 for symmetric)
+      Mean effective h: 1.055
+      Median effective h: 0.764
+      Near-symmetric pairs (0.5 < |ratio| < 2.0): 20/20
+
+
+2. NEURON TRIPLET ANALYSIS (Second Derivatives)
+--------------------------------------------------
+
+  d2u/dx2 at layer_0:
+    Total candidate triplets found: 10
+    Top 3 triplets by quality:
+      #1: neurons=[54,7,35] | pw=[-0.567, +1.001, -0.844] | ratio=1.42 (ideal=2.0) | evenness=0.98
+      #2: neurons=[54,7,14] | pw=[-0.567, +1.001, -0.523] | ratio=1.84 (ideal=2.0) | evenness=0.86
+      #3: neurons=[54,7,33] | pw=[-0.567, +1.001, -0.924] | ratio=1.34 (ideal=2.0) | evenness=0.91
+
+  d2u/dy2 at layer_0:
+    Total candidate triplets found: 10
+    Top 3 triplets by quality:
+      #1: neurons=[36,1,63] | pw=[+0.750, -0.875, +0.548] | ratio=1.35 (ideal=2.0) | evenness=0.98
+      #2: neurons=[48,1,63] | pw=[+0.842, -0.875, +0.548] | ratio=1.26 (ideal=2.0) | evenness=1.00
+      #3: neurons=[36,1,15] | pw=[+0.750, -0.875, +0.461] | ratio=1.44 (ideal=2.0) | evenness=0.81
+
+  Laplacian at layer_0:
+    Total candidate triplets found: 10
+    Top 3 triplets by quality:
+      #1: neurons=[48,34,6] | pw=[+0.801, -1.071, +0.819] | ratio=1.32 (ideal=2.0) | evenness=1.00
+      #2: neurons=[36,34,6] | pw=[+0.753, -1.071, +0.819] | ratio=1.36 (ideal=2.0) | evenness=0.98
+      #3: neurons=[54,29,14] | pw=[-0.662, +1.131, -0.629] | ratio=1.75 (ideal=2.0) | evenness=0.82
+
+
+3. DERIVATIVE CONTRIBUTION PRODUCT ANALYSIS
+--------------------------------------------------
+  Product p_i * w_{direction,i} reveals the effective derivative
+  contribution of each neuron.
+
+  du/dx products (p_i * w_x_i):
+    Sum: -4.4479
+    Mean: -0.0695
+    Fraction negative: 90.6%
+  du/dy products (p_i * w_y_i):
+    Sum: -4.5601
+    Mean: -0.0713
+    Fraction negative: 96.9%
+
+
+4. INTERPRETATION
+--------------------------------------------------
+  FINDING 1: Neuron pairs with difference-like patterns EXIST
+    - Neurons with similar spatial orientation but different biases
+    - Combined with opposite-sign probe weights
+    - This is structurally analogous to finite differences
+    - However, the network uses smooth tanh functions, not point evaluations
+    - This represents a 'soft' or 'continuous' finite difference
+
+  FINDING 2: [1,-2,1] triplet patterns partially present
+    - Some neuron triplets show the characteristic sign pattern
+    - Quality varies; not perfect central difference stencils
+    - Consistent with weak second derivative R2 scores
+
+  FINDING 3: Product analysis p_i * w_{dir,i}
+    - Systematic sign bias in products indicates directional computation
+    - Neurons are not randomly contributing to derivative prediction
+
+  OVERALL CONCLUSION:
+    The network's derivative computation is PARTIALLY analogous to
+    finite differences, but operates in a continuous, distributed manner.
+    Rather than discrete point evaluations, neurons create smooth
+    spatial basis functions that are combined via probe weights.
+    This is a 'continuous finite difference' or 'spectral-like' approach.
+
+================================================================================
+END OF REPORT
+================================================================================

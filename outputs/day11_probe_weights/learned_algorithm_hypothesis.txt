@@ -1,0 +1,238 @@
+================================================================================
+PRELIMINARY HYPOTHESIS: THE LEARNED ALGORITHM OF A POISSON PINN
+Days 11-12 Probe Weight Analysis — Initial Findings
+================================================================================
+
+Project: Mechanistic Interpretability for Physics-Informed Neural Networks
+Model: MLP PINN (4x64, tanh), trained on 2D Poisson equation
+       u(x,y) = sin(pi*x)*sin(pi*y), relative L2 error = 0.99%
+
+--------------------------------------------------------------------------------
+1. WEIGHT PATTERN ANALYSIS
+--------------------------------------------------------------------------------
+
+Analysis of the linear probe weights reveals a structured relationship
+between the PINN's learned representations and derivative computation.
+For first-derivative probes at layer 0 (the first hidden layer), the
+probe weights for du/dx are strongly anticorrelated with the PINN's
+input x-weights (r = -0.70), while du/dy probe
+weights anticorrelate with the y-weights (r = -0.75).
+Cross-correlations are negligible (r ~ 0.03), demonstrating clean
+directional specificity: the network uses separate neuron populations
+for each spatial derivative. The product p_i * w_{dir,i} is negative
+for 91% (du/dx) and
+97% (du/dy) of neurons,
+revealing a systematic sign pattern consistent with the chain rule:
+d/dx[tanh(w*x+b)] = w * sech^2(w*x+b), where the tanh-to-derivative
+mapping introduces a sign flip that the probe must compensate for.
+
+Neuron pairs with similar input weight directions but different biases
+— 372 pairs for du/dx and
+397 for du/dy — carry opposite-sign
+probe weights, forming continuous analogues of finite difference stencils.
+The weight ratios in these pairs cluster near -1.0 (mean symmetry
+scores: 0.72 for du/dx,
+0.87 for du/dy),
+matching the symmetric central difference pattern [-1, +1]. For second
+derivatives, triplet patterns with the characteristic [+, -, +] sign
+structure achieve cosine similarities of 0.981
+(d2u/dx2) and 0.986 (Laplacian) against the
+ideal [1, -2, 1] stencil, though the middle-to-outer weight ratios
+(~1.3-1.8) fall short of the ideal 2.0, explaining why second derivatives
+remain only partially encoded (R2 ~ 0.5 vs R2 > 0.9 for first
+derivatives). Weight concentration increases with depth: the top 10
+neurons carry 25% of total weight at layer 0, growing to 32-40% at
+layer 3, indicating progressive specialization of derivative circuits.
+
+--------------------------------------------------------------------------------
+2. HYPOTHESIS: MULTI-SCALE CONTINUOUS FINITE DIFFERENCE ALGORITHM
+--------------------------------------------------------------------------------
+
+Based on the convergent evidence from probing experiments (Day 9) and
+weight analysis (Day 11), we propose the following hypothesis about
+the computational algorithm learned by the Poisson PINN:
+
+  HYPOTHESIS: The PINN implements a two-stage, multi-scale continuous
+  generalization of finite differences, where:
+
+  Stage 1 — Explicit First-Derivative Encoding:
+    Layer 0 neurons create a bank of shifted tanh basis functions,
+    h_i(x,y) = tanh(w_{x,i}*x + w_{y,i}*y + b_i), that tile the
+    domain at multiple spatial positions and orientations. Subsequent
+    layers combine these with opposite-sign weights to form difference
+    operations, producing an explicit representation of du/dx and du/dy
+    that is linearly decodable (R2 > 0.9) from the final hidden layer.
+    This is structurally analogous to a central difference [-1, +1]/h,
+    but operates on smooth basis functions at multiple grid spacings
+    (h ranges from 0.14 to 4.2), creating a multi-resolution
+    derivative approximation.
+
+  Stage 2 — Implicit Second-Derivative Computation:
+    Second-order derivatives (d2u/dx2, d2u/dy2, Laplacian) are NOT
+    explicitly stored in the activations (R2 ~ 0.3-0.5). Instead,
+    they are computed on-demand by PyTorch's autograd during the
+    backward pass, differentiating through the first-derivative
+    representations. Partial [1,-2,1] triplet patterns exist in the
+    weights (cosine similarity > 0.97) but with imperfect magnitudes,
+    indicating the network encodes partial second-derivative information
+    while relying on autograd for the complete computation.
+
+  This two-stage strategy is computationally efficient: only 2 values
+  (du/dx, du/dy) are cached in activations, while 3+ higher-order
+  derivatives are computed on-demand via the chain rule. The network
+  discovered this efficient allocation automatically through gradient
+  descent, analogous to how a human might memorize multiplication tables
+  (frequently-used values) while computing rare products by hand.
+
+--------------------------------------------------------------------------------
+3. EVIDENCE SUMMARY
+--------------------------------------------------------------------------------
+
+Evidence supporting each component of the hypothesis:
+
++----------------------------------+---------------------------------------+
+| Hypothesis Component             | Supporting Evidence                   |
++----------------------------------+---------------------------------------+
+| First derivs explicitly encoded  | R2(du/dx, L3) = 0.912              |
+|                                  | R2(du/dy, L3) = 0.893              |
++----------------------------------+---------------------------------------+
+| Second derivs implicitly computed| R2(Lap., L3)  = 0.342              |
+|                                  | R2(d2u/dx2)   = 0.464              |
++----------------------------------+---------------------------------------+
+| Directional specificity          | corr(w_x, p_dx) = -0.696             |
+|                                  | corr(w_y, p_dy) = -0.753             |
+|                                  | cross-corr ~ 0.028                  |
++----------------------------------+---------------------------------------+
+| FD-like difference pairs         | 372 pairs (du/dx), 397 pairs (du/dy)  |
+|                                  | symmetry ~ 0.72-0.87                    |
++----------------------------------+---------------------------------------+
+| [1,-2,1] triplet patterns        | cos_sim to ideal: 0.981-0.986       |
+|                                  | but ratios ~1.3-1.8 (not 2.0)        |
++----------------------------------+---------------------------------------+
+| Systematic sign in p*w products  | 91% negative (du/dx)               |
+|                                  | 97% negative (du/dy)               |
++----------------------------------+---------------------------------------+
+| Multi-scale grid spacings        | h range: 0.14 - 4.2 (7-10x)          |
+|                                  | Not single-scale like classical FD    |
++----------------------------------+---------------------------------------+
+| Progressive specialization       | Top-10 weight fraction:               |
+|                                  | L0: 25% -> L3: 32-40%                 |
++----------------------------------+---------------------------------------+
+
+--------------------------------------------------------------------------------
+4. COMPARISON TO CLASSICAL NUMERICAL METHODS
+--------------------------------------------------------------------------------
+
+The learned algorithm can be positioned within the landscape of
+classical numerical methods for PDEs:
+
+  Finite Differences (FD):
+    Similarity:  Difference of nearby function evaluations
+    Difference:  PINN uses smooth tanh basis, not point evaluations
+    Difference:  PINN uses multiple grid spacings simultaneously
+    Implication: A 'soft' or 'continuous' version of FD
+
+  Spectral Methods:
+    Similarity:  Global basis functions (tanh ≈ shifted sigmoid)
+    Similarity:  Smooth, differentiable basis functions
+    Difference:  tanh is not an eigenfunction of differential operators
+    Implication: Resembles a learned spectral basis
+
+  Radial Basis Function (RBF) Methods:
+    Similarity:  Shifted basis functions centered at different locations
+    Similarity:  Multi-scale resolution (different widths)
+    Difference:  tanh is not radially symmetric
+    Implication: Closest classical analogue may be RBF-FD
+
+  Multi-Resolution / Wavelet Methods:
+    Similarity:  Multiple grid spacings operating simultaneously
+    Similarity:  Different neurons sensitive to different scales
+    Difference:  No explicit scale decomposition
+    Implication: The network naturally develops multi-scale computation
+
+  BEST DESCRIPTION: The learned algorithm is a 'multi-scale RBF-FD
+  hybrid' — it uses shifted smooth basis functions (like RBF) combined
+  via difference operations (like FD) at multiple resolution scales
+  (like wavelets). This was discovered automatically by gradient descent.
+
+--------------------------------------------------------------------------------
+5. RELATION TO ORIGINAL RESEARCH HYPOTHESES
+--------------------------------------------------------------------------------
+
+  Hypothesis 1 (from CLAUDE.md): 'Early layers develop circuits
+  approximating local derivatives using weighted combinations of
+  nearby input coordinates (finite-difference-like patterns).'
+
+  STATUS: PARTIALLY CONFIRMED
+    - YES: Layers develop derivative computation circuits
+    - YES: Weighted combinations of shifted functions ≈ finite differences
+    - NUANCE: Not 'nearby input coordinates' directly, but nearby
+      *basis function evaluations* (tanh at shifted positions)
+    - NUANCE: 'Early layers' is partially correct — derivative info
+      is present from layer 0 (R2 ~ 0.78) but peaks at layer 3 (R2 ~ 0.91)
+    - SURPRISE: The computation is multi-scale, not single-scale
+    - SURPRISE: Second derivatives are NOT computed via FD but via autograd
+
+--------------------------------------------------------------------------------
+6. PREDICTIONS AND TESTABLE IMPLICATIONS
+--------------------------------------------------------------------------------
+
+If this hypothesis is correct, we predict:
+
+  P1: Removing layer 3 neurons with high |probe weight| for du/dx
+      should degrade the PDE solution quality, while removing neurons
+      with low |probe weight| should have minimal effect.
+      -> Testable via activation patching (Week 3)
+
+  P2: A wider network (more neurons) should allow more FD pairs and
+      potentially achieve higher R2 for second derivatives, by providing
+      more basis functions at different positions.
+      -> Testable via architecture comparison (Week 3-4)
+
+  P3: A deeper network (more layers) should show second derivative
+      information emerging at intermediate layers, as additional
+      layers can compose first-derivative representations.
+      -> Testable via probing deeper architectures
+
+  P4: Modified Fourier Networks (MFN), which use sinusoidal basis
+      functions instead of tanh, should show different stencil patterns
+      — potentially closer to spectral methods than FD.
+      -> Testable via MFN probe analysis (Week 3-4)
+
+  P5: For the Heat equation (time-dependent), the network should
+      develop separate temporal and spatial derivative circuits,
+      with temporal derivatives (du/dt) potentially encoded differently
+      from spatial derivatives (du/dx).
+      -> Testable via Heat equation probing (Week 3)
+
+--------------------------------------------------------------------------------
+7. LIMITATIONS AND CAVEATS
+--------------------------------------------------------------------------------
+
+  L1: Analysis is based on LINEAR probes. Non-linear probes might
+      reveal additional encoded information that linear probes miss.
+      Second derivatives might be encoded non-linearly.
+
+  L2: Results are for a single architecture (4x64 MLP, tanh) on a
+      single PDE (2D Poisson). Generalization to other architectures
+      and equations remains to be tested.
+
+  L3: The 'multi-scale FD' interpretation is a functional description.
+      The actual computation involves all 64 neurons simultaneously,
+      not isolated pairs/triplets. The pair analysis identifies
+      structure within a fundamentally distributed computation.
+
+  L4: Cosine similarity to ideal stencils is high (~0.98), but this
+      could partially reflect the mathematical constraints of the
+      [+, -, +] sign pattern rather than deliberate FD computation.
+
+  L5: The PINN was trained with a specific configuration (Adam, 20K
+      epochs, lr=1e-3). Different training hyperparameters might lead
+      to different computational strategies.
+
+================================================================================
+END OF HYPOTHESIS DOCUMENT
+================================================================================
+
+Generated: Day 11 of Mechanistic Interpretability for PINNs project
+Based on: Day 9 probing results + Day 11 weight analysis

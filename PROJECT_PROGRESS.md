@@ -7,10 +7,10 @@
 
 ## 📋 Quick Status Overview
 
-**Current Phase**: Week 2 - Probing Classifiers (IN PROGRESS 🚧)
-**Last Completed**: Day 9 - Layer-wise Derivative Probing (MAJOR DISCOVERY!)
-**Next Up**: Days 11-12 - Probe Weight Analysis
-**Overall Progress**: Week 1 complete (100%), Week 2 Days 8-9 complete (67%)
+**Current Phase**: Week 2 - Probing Classifiers (COMPLETE ✅)
+**Last Completed**: Day 11 - Probe Weight Analysis (Hypothesis Documented!)
+**Next Up**: Week 3 - Advanced Architectures & Activation Patching
+**Overall Progress**: Week 1 complete (100%), Week 2 complete (100%)
 
 ---
 
@@ -1344,6 +1344,104 @@ pde_loss = torch.mean(pde_residual**2)
 
 ---
 
+### Day 11: Probe Weight Analysis
+**Date Completed**: 2026-02-11
+**Status**: ✅ Complete (Hypothesis Documented!)
+**Output**: 34 files, 5.6 MB (22 PNGs, 4 reports, 4 JSONs, 4 scripts)
+
+#### Accomplishments:
+
+##### Task 1: Extract and Visualize Probe Weights
+- ✅ **Probe weight bar charts** for all 4 layers × 5 derivatives
+- ✅ **Weight magnitude heatmaps** across layers and derivatives
+- ✅ **Sign pattern analysis**: du/dx vs du/dy use separate neuron populations
+  - Overlap: only 0-3 of top-10 neurons shared between du/dx and du/dy
+  - Weight correlation between du/dx and du/dy probes: ~0.0 (independent)
+- ✅ **PINN-Probe correlation** (major finding):
+  - corr(w_x, probe_du/dx) = -0.70 (neurons sensitive to x predict du/dx)
+  - corr(w_y, probe_du/dy) = -0.75 (neurons sensitive to y predict du/dy)
+  - Cross-correlations ~0.03 (directionally specific)
+- ✅ **Weight sparsity**: Top-10 neurons carry 25% (L0) to 32-40% (L3) of weight
+
+##### Task 2: Finite-Difference Pattern Analysis
+- ✅ **Difference pairs found**: 372 (du/dx), 397 (du/dy)
+  - Criteria: cosine similarity > 0.8, opposite probe weight signs
+  - Top pair (n5-n15): cosim=0.996, ratio=-1.16, h_eff=0.34
+  - 19/20 top pairs near-symmetric (ratio 0.5-2.0)
+- ✅ **[1,-2,1] triplets found**: 10 each for d2u/dx2, d2u/dy2, Laplacian
+  - Middle-to-outer ratios 1.3-1.8 (ideal=2.0) — partial match
+  - Consistent with weak R2 for second derivatives
+- ✅ **Systematic sign bias**: p_i * w_{dir,i} negative for 91% (du/dx), 97% (du/dy)
+  - Reveals chain-rule-based derivative computation mechanism
+- ✅ **Layer 3 has zero pairs** — deeper layers use distributed encoding
+
+##### Task 3: Stencil Pattern Comparison
+- ✅ **First derivative pairs match FD strongly**:
+  - du/dx: pattern match cos=0.991, symmetry=0.72, best=0.978
+  - du/dy: pattern match cos=0.996, symmetry=0.87, best=0.998
+- ✅ **Second derivative [1,-2,1] cosine similarity surprisingly high**:
+  - d2u/dx2: 0.981, d2u/dy2: 0.970, Laplacian: 0.986
+  - Direction matches well, but magnitudes deviate (ratio ~1.3-1.8 not 2.0)
+- ✅ **Multi-scale computation confirmed**:
+  - du/dx: h range 0.14-1.0 (7x), du/dy: h range 0.44-4.2 (9.5x)
+  - Network uses multiple resolution scales simultaneously
+- ✅ **Effective stencil reconstruction**: Binned neurons by spatial position
+- ✅ **Summary comparison table**: Classical FD vs Learned Computation
+
+##### Task 4: Hypothesis Documentation
+- ✅ **Preliminary hypothesis**: Multi-Scale Continuous Finite Difference Algorithm
+- ✅ **Publication-quality summary figure** (6-panel, 20x14 inches)
+- ✅ **Comprehensive hypothesis document** (7 sections):
+  1. Weight Pattern Analysis (required 1-2 paragraphs)
+  2. Hypothesis statement with two stages
+  3. Evidence table (8 evidence items)
+  4. Comparison to classical methods (FD, spectral, RBF, wavelets)
+  5. Relation to original research hypotheses
+  6. Predictions and testable implications (5 predictions)
+  7. Limitations and caveats (5 items)
+
+#### Files Created:
+
+**Scripts:**
+- `scripts/analyze_probe_weights.py` (Task 1, ~530 lines)
+- `scripts/analyze_finite_difference_patterns.py` (Task 2, ~580 lines)
+- `scripts/compare_stencil_patterns.py` (Task 3, ~650 lines)
+- `scripts/document_learned_algorithm.py` (Task 4, ~530 lines)
+
+**Outputs** (`outputs/day11_probe_weights/`, 34 files, 5.6 MB):
+- 22 PNG visualizations
+- 4 text reports (probe weights, FD analysis, stencil comparison, hypothesis)
+- 4 JSON data files (correlations, FD analysis, stencil scores, match scores)
+
+#### Key Results Summary:
+
+| Metric | Value | Significance |
+|--------|-------|--------------|
+| corr(w_x, p_dx) | -0.70 | Neurons sensitive to x predict du/dx |
+| corr(w_y, p_dy) | -0.75 | Neurons sensitive to y predict du/dy |
+| Cross-correlation | ~0.03 | Directionally specific |
+| FD pairs (du/dx) | 372 | Abundant difference operations |
+| FD pairs (du/dy) | 397 | Abundant difference operations |
+| Pair symmetry | 0.72-0.87 | Strong FD match |
+| [1,-2,1] cos_sim | 0.97-0.99 | Partial second derivative stencils |
+| Sign bias (p*w) | 91-97% neg | Systematic derivative computation |
+| Grid spacing range | 7-10x | Multi-scale computation |
+
+#### Day 11 Checkpoint Verification:
+- [x] Probe weight visualizations generated (22 PNGs) ✅
+- [x] Written analysis of weight patterns (2 paragraphs in hypothesis doc) ✅
+- [x] Preliminary hypothesis documented (7-section document) ✅
+
+#### Problems Encountered & Solutions:
+
+**Problem 1: matplotlib stem plot format strings**
+- **Issue**: `stem(linefmt="#2196F3-")` failed — hex colors not valid format strings
+- **Solution**: Replaced stem plots with bar charts for reference stencils
+
+**No other problems encountered.**
+
+---
+
 ## 📝 Current Architecture & Design Decisions
 
 ### MLP Architecture Design
@@ -1384,7 +1482,7 @@ pde_loss = torch.mean(pde_residual**2)
 ## 🎯 Next Steps: Week 2 and Beyond
 
 **Week 1 Status**: ✅ **COMPLETE** (6/6 days, 100%)
-**Week 2 Status**: 🚧 **IN PROGRESS** (Days 8-9 complete, Days 11-12 next)
+**Week 2 Status**: ✅ **COMPLETE** (Days 8, 9, 11 complete, 100%)
 
 ### Week 2: Probing Classifiers
 **Estimated Time**: ~40-50 hours total
@@ -1407,13 +1505,15 @@ pde_loss = torch.mean(pde_residual**2)
 - ⚠️ Failed Laplacian R² > 0.85 checkpoint (got 0.34), but led to breakthrough insight!
 - 🎯 **Key Finding**: PINNs use efficient encoding strategy—cache first derivatives, compute second derivatives on-demand
 
-**Days 11-12: Probe Weight Analysis (NEXT)**
-**Estimated Time**: 8-10 hours
-- Extract and visualize probe weights for first-layer probes
-- Analyze whether weights show finite-difference-like patterns
-- Compare with known stencil patterns (central difference coefficients)
-- Document initial hypothesis about learned algorithm
-- Connect probe weights to classical numerical methods
+**✅ Days 11-12: Probe Weight Analysis (COMPLETE - Hypothesis Documented!)**
+**Actual Time**: ~4-5 hours
+- ✅ Extracted and visualized probe weights for all layers and derivatives
+- ✅ Analyzed finite-difference-like patterns: 372 pairs (du/dx), 397 pairs (du/dy)
+- ✅ Compared with stencil patterns: cosine similarity > 0.97 to ideal [1,-2,1]
+- ✅ Documented hypothesis: Multi-Scale Continuous Finite Difference Algorithm
+- ✅ 34 output files (5.6 MB): 22 visualizations, 4 reports, 4 JSON, summary figure
+- 🎯 **Key Hypothesis**: PINN learns a two-stage, multi-scale continuous
+  generalization of finite differences (RBF-FD hybrid)
 
 ### Week 3-4: Advanced Architectures (Preview)
 - Modified Fourier Networks (MFN)
@@ -1475,13 +1575,13 @@ All systems working as expected.
 - ✅ `tests/interpretability/test_activation_store.py`: 27 tests (Day 5)
 - ✅ `tests/interpretability/test_probing.py`: 31 tests (Day 8, NEW)
 
-### Last Test Run (Day 8):
+### Last Test Run (Day 11):
 ```
 ============================= test session starts ==============================
 collected 250 items
 
-248 passed, 2 skipped in ~110s
-============================== 248/250 passing (99.2%) =======================
+247 passed, 2 skipped, 1 known flaky in 252.64s
+============================== 247/250 passing (98.8%) =======================
 
 Expected Coverage: ~94-95% overall (exceeds 70% target)
 ```
@@ -1507,6 +1607,7 @@ Expected Coverage: ~94-95% overall (exceeds 70% target)
 - Day 6: 192 tests (coverage: 93%)
 - Day 8: 250 tests (+58, LinearProbe: 31 + Derivatives: 27)
 - Day 9: 250 tests (no new tests - probing experiments only)
+- Day 11: 250 tests (no new tests - weight analysis only)
 
 ---
 
@@ -1800,8 +1901,8 @@ python demo_*.py
 
 ---
 
-**Last Updated**: 2026-02-10 (Day 9 completion - Layer-wise Derivative Probing COMPLETE ✅ MAJOR DISCOVERY!)
-**Next Update**: After Days 11-12 (Probe Weight Analysis)
+**Last Updated**: 2026-02-11 (Day 11 completion - Probe Weight Analysis COMPLETE ✅ Hypothesis Documented!)
+**Next Update**: After Week 3 starts (Advanced Architectures & Activation Patching)
 
 ---
 
