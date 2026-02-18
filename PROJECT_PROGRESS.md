@@ -1440,6 +1440,62 @@ pde_loss = torch.mean(pde_residual**2)
 
 **No other problems encountered.**
 
+#### Retrospective: Mechanistic Correction (2026-02-17)
+
+After further analysis, the interpretation of Tasks 2, 3, and 4 requires refinement. The findings are **still valid**, but the mechanistic explanation is more precise:
+
+##### What Was Mischaracterized
+
+The original framing stated: *"the difference of two shifted tanh functions approximates a derivative."* This is imprecise. Concretely:
+
+```
+tanh(x - h) - tanh(x + h)  ≈  -2h · sech²(x)
+```
+
+This produces a **symmetric localized negative bump** (sech²-shaped), NOT the derivative of an arbitrary function. The derivative of a Gaussian, for example, is antisymmetric (positive lobe on one side, negative on the other) — a completely different shape.
+
+The correct finite-difference identity is:
+
+```
+f(x + h) - f(x - h)  ≈  2h · f'(x)
+```
+
+This works when you shift the **same function** f to two nearby positions and subtract their values. That is how classical finite differences work. Tanh neurons do not do this directly.
+
+##### Corrected Mechanistic Picture
+
+**What each neuron actually computes:**
+Each tanh neuron is a smooth spatial step function — a detector that transitions from -1 to +1 at a specific location in (x, y) space. Two neurons with similar weight vectors but different biases are step functions offset in space.
+
+**What their difference produces:**
+A localized bump (≈ sech²) centered at the midpoint between the two transitions. This is a **basis function**, not a derivative.
+
+**What the probe actually does:**
+The probe learns to combine these sech²-shaped basis functions with stencil-like coefficients (+p, -p for first derivatives; +p, -2p, +p for second derivatives). The combination of bump basis functions with finite-difference-like weights can reconstruct derivative-like spatial patterns. This is analogous to **RBF (Radial Basis Function) methods** or **wavelet decompositions**, not literal finite differences.
+
+##### Impact on Each Task
+
+| Task | Original Claim | Corrected Claim | Evidence Status |
+|------|---------------|-----------------|-----------------|
+| Task 2 (FD Pairs) | Pairs sample function at shifted positions | Pairs combine offset sech² bumps with opposite weights | Still valid — pairs exist, opposite signs confirmed |
+| Task 2 (sign bias 91-97%) | Neurons do finite differences | Probe learns to combine bump detectors with stencil coefficients | Still valid — bias is real |
+| Task 3 (cosine 0.99) | Probe weights match FD stencil | Probe weights match FD stencil over bump basis functions | Still valid — cosines are real |
+| Task 3 (ratio 1.3-1.8 vs ideal 2.0) | Partial match to [1,-2,1] | Expected deviation: combining bumps ≠ combining function values | Now fully explained |
+| Task 4 (Hypothesis) | Multi-Scale Continuous Finite Difference Algorithm | Multi-Scale Bump-Basis Derivative Decomposition | Rename recommended |
+
+##### Refined Hypothesis Statement
+
+> The PINN's first layer produces a collection of localized sech²-shaped bump features at varied spatial positions and scales. Subsequent layers (or linear probes) combine these bumps with stencil-like coefficients (+1/−1 for first derivatives; +1/−2/+1 for second derivatives) to reconstruct derivative information. The multi-scale nature (effective h ranging 7–10×) allows simultaneous representation of derivative information at multiple spatial resolutions.
+
+This is a richer and more accurate mechanism than classical finite differences. The network is not "sampling the function" at two points — it is building a basis function representation of the spatial domain and extracting derivatives through appropriate linear combinations. The finite-difference analogy remains useful as an intuition, but the correct analogy is **basis function methods** (RBF, wavelets).
+
+##### What Does Not Change
+
+- All R² scores, correlation values, and cosine similarities from Tasks 1–4 remain unchanged
+- The directional specificity finding (du/dx and du/dy use independent neuron populations) is unaffected
+- The multi-scale computation finding (h_eff range 7–10×) is unaffected
+- The 372/397 difference pairs and 10 second-derivative triplets are real
+
 ---
 
 ### Day 13: Week 2 Consolidation
